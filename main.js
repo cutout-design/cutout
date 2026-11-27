@@ -303,6 +303,8 @@ ipcMain.handle('update:download', async () => {
   const u = getUpdater();
   if (!u || !update.version) return { status: 'error' };
   if (update.ready) return { status: 'ready', version: update.ready };
+  // Mac: the update can only replace Cutout in the Applications folder
+  if (process.platform === 'darwin' && app.isPackaged && !app.isInApplicationsFolder()) return { status: 'move' };
   try {
     update.downloading = update.downloading || u.downloadUpdate();
     await update.downloading;
@@ -378,8 +380,8 @@ app.whenReady().then(async () => {
 });
 // Mac: updates can only replace Cutout when it runs from the Applications folder. Opened straight
 // from Downloads, macOS runs a hidden read-only copy and the update fails. So offer to move it there
-// (as many Mac apps do), until the user says not to ask again. Not when opened with files: moving
-// restarts Cutout, and the files would be lost.
+// (as many Mac apps do). Asked once: Do Not Move means never ask again (an update then says why it
+// can't install). Not when opened with files: moving restarts Cutout, and the files would be lost.
 async function offerMoveToApplications() {
   if (!updatesOn || !app.isPackaged || settings.noMoveOffer || pendingFiles.length) return false;
   try { if (app.isInApplicationsFolder()) return false; } catch (_) { return false; }
@@ -390,10 +392,10 @@ async function offerMoveToApplications() {
     buttons: ['Move to Applications', 'Do Not Move'],
     defaultId: 0,
     cancelId: 1,
-    checkboxLabel: 'Don’t ask again',
   });
   if (r.response === 0) return moveToApplications();
-  if (r.checkboxChecked) { settings.noMoveOffer = true; saveSettings(); }
+  settings.noMoveOffer = true;
+  saveSettings();
   return false;
 }
 function moveToApplications() {

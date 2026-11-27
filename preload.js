@@ -26,7 +26,7 @@ contextBridge.exposeInMainWorld('cutoutNative', {
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
   /** The daily check found a version to offer: cb({ status: 'available', version, current }). */
   onUpdate: cb => { ipcRenderer.on('update:available', (_e, info) => cb(info)); },
-  /** Download Update. → { status: 'ready', version } | { status: 'error' } */
+  /** Download Update. → { status: 'ready', version } | { status: 'move' } (Mac, not in Applications) | { status: 'error' } */
   downloadUpdate: () => ipcRenderer.invoke('update:download'),
   /** While downloading: cb(percent). */
   onUpdateProgress: cb => { ipcRenderer.on('update:progress', (_e, pct) => cb(pct)); },

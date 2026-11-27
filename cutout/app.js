@@ -2905,6 +2905,7 @@
     toast(`Downloading Cutout ${offered}`);
     const r = await Platform.downloadUpdate().catch(() => ({ status: 'error' }));
     if (r.status === 'ready') whenFree(() => showUpdate(r));
+    else if (r.status === 'move') toast('To update, move Cutout to the Applications folder');
     else toast('Couldn’t download the update');
   });
   $('#dlgUpdateReady').addEventListener('close', e => {
