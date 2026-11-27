@@ -23,12 +23,17 @@ plist="$app/Contents/Info.plist"
   /usr/libexec/PlistBuddy -c "Add :ElectronTeamID string $team" "$plist"
 
 inherit="$root/installer/entitlements.mas.inherit.plist"
-# Inside out: frameworks and libraries, then the helper apps (they inherit the sandbox), then the app.
+# Inside out: frameworks and libraries, the helper apps (they inherit the sandbox), the login helper, then the app.
 for f in "$app"/Contents/Frameworks/*; do
   case "$f" in
     *.app) codesign --force --deep --sign - --entitlements "$inherit" "$f" ;;
     *) codesign --force --deep --sign - "$f" ;;
   esac
+done
+# Electron's Mac App Store build also carries a login helper (Cutout never starts it): its own sandbox, no inherit.
+/usr/libexec/PlistBuddy -c "Add :com.apple.security.app-sandbox bool true" "$tmp/helper.plist" >/dev/null
+for h in "$app"/Contents/Library/LoginItems/*.app; do
+  [ -e "$h" ] && codesign --force --deep --sign - --entitlements "$tmp/helper.plist" "$h"
 done
 codesign --force --sign - --entitlements "$tmp/app.plist" "$app"
 codesign --verify --deep --strict "$app"
