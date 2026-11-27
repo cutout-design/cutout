@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <!-- Hardened runtime exceptions for the signed, notarized Mac build (electron-builder.signed.js). Not named
+         entitlements.mac.plist, which electron-builder would also pick up for the ad-hoc builds.
+         Electron's JavaScript engine compiles code at run time, so it needs JIT memory. Nothing else:
+         Cutout uses no camera, microphone, location or third-party libraries. -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+  </dict>
+</plist>

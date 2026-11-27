@@ -20,7 +20,9 @@ Only the latest release gets fixes. Updating to it is the way to get them.
 
 ## Checking a download
 
-The installers aren't code-signed yet. Starting with the next release after 1.3.5, there are two ways to check that a download is the file the release workflow built.
+Starting with the next release after 1.3.5, the Mac app is signed with an Apple Developer ID and notarized by Apple, so macOS checks it when it opens. In Terminal, `spctl -a -vv /Applications/Cutout.app` should say `accepted` and `source=Notarized Developer ID`.
+
+From that release on, there are also two ways to check that any download is the file the release workflow built.
 
 **Checksum.** Each release lists the SHA-256 checksum of every file in `SHA256SUMS.txt`. Compute your download's checksum and compare it with the line for that file:
 
