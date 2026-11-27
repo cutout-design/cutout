@@ -21,7 +21,7 @@ body:
         Windows: the Cutout version, shown in About Cutout, in the Cutout menu.\
         Mac: the Cutout version, shown in About Cutout, in the menu bar.\
         Web: your browser and its version.
-      placeholder: "1.3.5, or Edge 158"
+      placeholder: "1.3.5, Edge 158, Chrome 160, etc."
     validations:
       required: true
   - type: textarea
