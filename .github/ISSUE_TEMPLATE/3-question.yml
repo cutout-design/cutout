@@ -32,14 +32,14 @@ body:
       description: Optional. Shown in About Cutout, in the Cutout menu (on a Mac, in the menu bar).
       placeholder: "1.3.5"
   - type: dropdown
-    id: where
+    id: platform
     attributes:
-      label: Where
+      label: Platform
       description: Optional.
       options:
         - Windows
         - Mac
-        - Web version
+        - Web
         - Doesn't matter
   - type: textarea
     id: image
