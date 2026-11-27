@@ -3083,7 +3083,8 @@
     requestRender();
   }
 
-  vc.addEventListener('pointermove', e => {
+  vc.addEventListener('pointermove', e => { onPointerMove(e); autoScrollWatch(e); });
+  function onPointerMove(e) {
     const p = screenPt(e), d = toDoc(p), px = pixel(d);
     lastMouse = p;
     updateStatus(px);
@@ -3283,7 +3284,75 @@
         break;
       }
     }
-  });
+  }
+
+  /* ---------- auto-scroll: a marquee, a layer move or a rubber band dragged to the edge of the view
+   * pans it that way (Fireworks, Figma), faster the further past the edge, and keeps extending the
+   * drag while the pointer is held still. Starts once the pointer has moved a little since it went
+   * down (a click near the edge doesn't scroll), stops when the drag ends or is cancelled (Esc), and
+   * stops on a side once the artboard's edge there is well inside the view: selections are clipped
+   * to the artboard, so scrolling further would add nothing. */
+  const AUTO_SCROLL_KINDS = new Set(['marquee', 'move', 'rubber']);
+  // Speeds in CSS px per frame (at 60 fps). Inside the edge it works like Figma (measured: from 0 at
+  // 15 px inside to 600 px/s at the edge); past the edge it keeps speeding up, to 4x that 40 px out
+  // (Cutout's big images at 100%). Full speed so close to the edge keeps the narrow side (toolbar,
+  // then the screen's edge) as fast as the side with the Layers panel.
+  const AUTO_EDGE = 15;   // the zone inside the view's edge that starts scrolling
+  const AUTO_AT_EDGE = 10; // speed with the pointer right at the edge (Figma's only speed)
+  const AUTO_MAX = 40;    // the fastest it goes, from AUTO_PAST past the edge
+  const AUTO_PAST = 40;
+  const AUTO_MARGIN = 48; // CSS px: how far into the view the artboard's edge may come
+  let downPt = null;      // where the pointer went down (screen px), to tell a click from a drag
+  let auto = null;        // { drag, ev, t } while the loop runs
+  vc.addEventListener('pointerdown', e => { downPt = screenPt(e); }, true);
+  /** Pan speed on one axis, in CSS px per frame: < 0 toward the start, > 0 toward the end, 0 = none. */
+  function edgeSpeed(pos, size) {
+    const past = Math.max(-pos, pos - size); // how far past the nearer edge (< 0: inside)
+    if (past <= -AUTO_EDGE) return 0;
+    const v = past <= 0 ? AUTO_AT_EDGE * (past + AUTO_EDGE) / AUTO_EDGE : AUTO_AT_EDGE + (AUTO_MAX - AUTO_AT_EDGE) * Math.min(1, past / AUTO_PAST);
+    return pos < size / 2 ? -v : v;
+  }
+  function autoScrollSpeed(ev) {
+    const r = vc.getBoundingClientRect();
+    let vx = edgeSpeed(ev.clientX - r.left, r.width), vy = edgeSpeed(ev.clientY - r.top, r.height);
+    // Stop on a side once the artboard's edge there is AUTO_MARGIN inside the view
+    const a = artboardScreenRect(), m = AUTO_MARGIN * dpr;
+    if (vx < 0 && a.x >= m) vx = 0;
+    if (vx > 0 && a.x + a.w <= vc.width - m) vx = 0;
+    if (vy < 0 && a.y >= m) vy = 0;
+    if (vy > 0 && a.y + a.h <= vc.height - m) vy = 0;
+    return { vx, vy };
+  }
+  function autoScrollWatch(e) {
+    if (!drag || !AUTO_SCROLL_KINDS.has(drag.kind)) return;
+    if (!drag.autoArmed) {
+      const p = screenPt(e);
+      if (!downPt || Math.hypot(p.x - downPt.x, p.y - downPt.y) < 4 * dpr) return;
+      drag.autoArmed = true;
+    }
+    // What the loop replays each frame: the pointer position and modifier keys
+    const ev = { clientX: e.clientX, clientY: e.clientY, shiftKey: e.shiftKey, ctrlKey: e.ctrlKey, metaKey: e.metaKey, altKey: e.altKey, pointerType: 'auto', buttons: 1 };
+    if (auto && auto.drag === drag) { auto.ev = ev; return; }
+    const { vx, vy } = autoScrollSpeed(ev);
+    if (!vx && !vy) return;
+    auto = { drag, ev, t: performance.now() };
+    requestAnimationFrame(autoScrollFrame);
+  }
+  function autoScrollFrame(now) {
+    if (!auto || auto.drag !== drag) { auto = null; return; } // drag ended, cancelled or replaced
+    const { vx, vy } = autoScrollSpeed(auto.ev);
+    if (!vx && !vy) { auto = null; return; } // pointer back inside, or the artboard's edge reached
+    const k = Math.min(4, Math.max(0, (now - auto.t) / (1000 / 60))); // frames' worth of time since the last step
+    auto.t = now;
+    if (k > 0) {
+      userView();
+      view.ox -= vx * k * dpr;
+      view.oy -= vy * k * dpr;
+      onPointerMove(auto.ev); // the drag follows: same pointer, new spot in the document
+      requestRender();
+    }
+    requestAnimationFrame(autoScrollFrame);
+  }
 
   function endDrag() {
     if (!drag) return;
@@ -4252,5 +4321,5 @@
   }
 
   // Handy for debugging from the console.
-  window.Cutout = { state, view, render, undo, redo, addImageLayer, makeCanvas, ctx2d, changed, setTool, historyBytes, compactHistory, isDirty: () => dirty };
+  window.Cutout = { state, view, render, autoScrolling: () => !!auto, undo, redo, addImageLayer, makeCanvas, ctx2d, changed, setTool, historyBytes, compactHistory, isDirty: () => dirty };
 })();
