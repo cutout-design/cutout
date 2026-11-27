@@ -2,8 +2,9 @@
 
 What's new in each version of Cutout. The section for a version becomes its release notes on GitHub.
 
-## Unreleased
+## 1.3.4 (2026-11-26)
 
+- Cutout is now free and open source under the MIT license.
 - Mac: a new app icon in the macOS 26 style, so it shows at full size instead of shrunk onto a gray tile.
 - Keyboard and screen reader support: Tab reaches every button, field and layer row with a visible focus ring; menus work with the arrow keys, Enter and Esc; Control+Return (or the Menu key or Shift+F10 on Windows) opens the canvas's right-click menu; screen readers hear control names, states and Cutout's messages. Mouse use is unchanged.
 - With reduced motion turned on in the system, the marching ants stand still and the panels don't animate.
