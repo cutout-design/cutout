@@ -1,0 +1,48 @@
+name: Question
+description: Ask how something works
+title: "Question: "
+labels: [question]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Many answers are already in the [user guide](https://github.com/cutout-design/cutout/blob/main/docs/user-guide.md). For example:
+        - [Keyboard shortcuts](https://github.com/cutout-design/cutout/blob/main/docs/user-guide.md#keyboard-shortcuts): every key and what it does
+        - [Getting images in](https://github.com/cutout-design/cutout/blob/main/docs/user-guide.md#getting-images-in): pasting, opening and dropping images, and pasting from Figma
+        - [Desktop app and web version](https://github.com/cutout-design/cutout/blob/main/docs/user-guide.md#desktop-app-and-web-version): what differs between them
+        - [Tips and recipes](https://github.com/cutout-design/cutout/blob/main/docs/user-guide.md#tips-and-recipes): common tasks step by step
+  - type: checkboxes
+    id: guide
+    attributes:
+      label: The user guide
+      options:
+        - label: I looked in the user guide and didn't find an answer.
+          required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What would you like to know? If it's about something on screen, say what you did and where you got stuck.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Optional. Shown in About Cutout, in the Cutout menu (on a Mac, in the menu bar).
+      placeholder: "1.3.5"
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      description: Optional.
+      options:
+        - Windows
+        - Mac
+        - Web version
+        - Doesn't matter
+  - type: textarea
+    id: image
+    attributes:
+      label: Image
+      description: "Optional. Drag a made-up image here if it helps. Issues are public: please don't attach private or confidential images."

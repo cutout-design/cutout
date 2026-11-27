@@ -1,0 +1,27 @@
+name: Idea
+description: Suggest a change or a new feature
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cutout is deliberately small: a scratchpad for quick bitmap fixes next to a design tool. [CONTRIBUTING.md](https://github.com/cutout-design/cutout/blob/main/CONTRIBUTING.md) says what's out of scope, and how an agreed idea can become a pull request.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What were you trying to do, and what got in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: How could Cutout help? Optional.
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Before you send
+      options:
+        - label: I checked that this hasn't been suggested already.
+          required: true

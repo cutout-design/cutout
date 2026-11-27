@@ -1,0 +1,53 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown in About Cutout, in the Cutout menu (on a Mac, in the menu bar).
+      placeholder: "1.3.5"
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - Windows
+        - Mac
+        - Web version
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Only for the web version.
+      placeholder: "Edge 158"
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. Steps that make it happen again help most.
+      placeholder: |
+        1. Pasted a screenshot
+        2. Selected the background with the magic wand
+        3. Pressed Delete
+        Expected: ...
+        Instead: ...
+    validations:
+      required: true
+  - type: textarea
+    id: image
+    attributes:
+      label: Image or Figma copy
+      description: "If a particular image or Figma copy causes it, drag a made-up one here that shows the problem. Issues are public: please don't attach private or confidential images."
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Before you send
+      options:
+        - label: I checked that this isn't already reported.
+          required: true
