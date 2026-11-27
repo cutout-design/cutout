@@ -1,9 +1,10 @@
-// Builds the user guide page of the website (cutout.design/guide/) from docs/user-guide.md.
-// The page reuses site/index.html's styles, header, footer and theme switch, so it always matches
-// the site. Run by .github/workflows/website.yml:
+// Builds the user guide page of the website (cutout.design/guide/) from docs/user-guide.md, and the
+// privacy page (cutout.design/privacy/) from docs/privacy.md. The pages reuse site/index.html's
+// styles, header, footer and theme switch, so they always match the site. Run by .github/workflows/website.yml:
 //   MARKED=<folder of the marked package> GUIDE_DOCS=<docs folder> node scripts/build-guide.mjs <site output folder>
 // GUIDE_DOCS is the latest release's docs/ folder, so the guide matches the downloads (default: this
-// checkout's docs/). marked (MIT) is installed only for this step, outside the app.
+// checkout's docs/). The privacy page always comes from this checkout's docs/ (main), so a change to
+// it goes live without waiting for a release. marked (MIT) is installed only for this step, outside the app.
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -19,17 +20,25 @@ const docs = process.env.GUIDE_DOCS || path.join(root, 'docs');
 const md = fs.readFileSync(path.join(docs, 'user-guide.md'), 'utf8');
 const between = (s, a, b) => { const i = s.indexOf(a), j = s.indexOf(b, i); if (i < 0 || j < 0) throw new Error(`site/index.html: no ${a}…${b}`); return s.slice(i, j + b.length); };
 
-// Pieces of the home page, with links made to work one folder down (/guide/)
-const fromGuide = html => html
+// Pieces of the home page, with links made to work one folder down (/guide/, /privacy/)
+const oneDown = (html, here) => html
   .replace(/href="#"/g, 'href="../"')
   .replace(/href="#([^"]+)"/g, 'href="../#$1"')
   .replace(/src="images\//g, 'src="../images/')
-  .replace(/href="https:\/\/github\.com\/cutout-design\/cutout\/blob\/main\/docs\/user-guide\.md"/g, 'href="./" aria-current="page"')
-  .replace(/href="guide\/"/g, 'href="./" aria-current="page"');
+  .replace(/href="https:\/\/github\.com\/cutout-design\/cutout\/blob\/main\/docs\/user-guide\.md"/g, 'href="guide/"')
+  .replace(/href="(guide|privacy)\/"/g, (m, p) => (p === here ? 'href="./" aria-current="page"' : `href="../${p}/"`));
 const style = between(site, '<style>', '</style>');
-const header = fromGuide(between(site, '<header class="nav">', '</header>'));
-const footer = fromGuide(between(site, '<footer>', '</footer>'));
+const header = oneDown(between(site, '<header class="nav">', '</header>'), 'guide');
+const footer = oneDown(between(site, '<footer>', '</footer>'), 'guide');
 const theme = between(site, '  // Light / dark switch', '  })();');
+// Text styles shared by the guide and the privacy page
+const docStyle = `  .doc { max-width: 72ch; }
+  .doc h1 { font-size: clamp(32px, 4vw, 44px); line-height: 1.1; letter-spacing: -.02em; margin: 0 0 20px; }
+  .doc h2 { font-size: 26px; letter-spacing: -.01em; margin: 56px 0 14px; scroll-margin-top: 88px; }
+  .doc h3 { font-size: 19px; margin: 32px 0 10px; scroll-margin-top: 88px; }
+  .doc p, .doc li { color: var(--text); }
+  .doc ul, .doc ol { padding-left: 22px; }
+  .doc li { margin: 4px 0; }`;
 const preTheme = between(site, '<script>try {', '</script>');
 
 // Headings get the same ids as on GitHub, so the guide's own links (#keyboard-shortcuts) work
@@ -95,13 +104,7 @@ ${style.replace('</style>', `
   .guide nav.toc a { display: block; padding: 4px 0; color: var(--muted); }
   .guide nav.toc a:hover { color: var(--text); text-decoration: none; }
   .guide nav.toc a.here { color: var(--accent); }
-  .doc { max-width: 72ch; }
-  .doc h1 { font-size: clamp(32px, 4vw, 44px); line-height: 1.1; letter-spacing: -.02em; margin: 0 0 20px; }
-  .doc h2 { font-size: 26px; letter-spacing: -.01em; margin: 56px 0 14px; scroll-margin-top: 88px; }
-  .doc h3 { font-size: 19px; margin: 32px 0 10px; scroll-margin-top: 88px; }
-  .doc p, .doc li { color: var(--text); }
-  .doc ul, .doc ol { padding-left: 22px; }
-  .doc li { margin: 4px 0; }
+${docStyle}
   .doc img { border-radius: 12px; border: 1px solid var(--line); box-shadow: var(--shadow); margin: 8px 0; }
   .doc code { font: 13.5px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace; background: var(--bg-soft); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; }
   .doc table { border-collapse: collapse; width: 100%; margin: 12px 0 20px; font-size: 15px; }
@@ -142,3 +145,65 @@ ${theme}
 `;
 fs.writeFileSync(path.join(out, 'guide/index.html'), page);
 console.log(`guide: ${toc.length} sections, ${used.size} headings -> ${path.join(out, 'guide/index.html')}`);
+
+// The privacy page (/privacy/): one column, no contents list
+{
+  const md = fs.readFileSync(path.join(root, 'docs/privacy.md'), 'utf8');
+  const ids = new Map();
+  const marked = new Marked({ gfm: true });
+  marked.use({
+    renderer: {
+      heading({ tokens, depth }) {
+        const text = this.parser.parseInline(tokens);
+        const base = text.toLowerCase().trim().replace(/<[^>]+>/g, '').replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s/g, '-');
+        const n = ids.get(base) || 0; ids.set(base, n + 1);
+        return `<h${depth} id="${n ? `${base}-${n}` : base}">${text}</h${depth}>\n`;
+      },
+    },
+  });
+  const desc = 'Cutout collects nothing about you: no account, no analytics, no tracking, and no uploads.';
+  const page = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cutout privacy</title>
+<meta name="description" content="${desc}">
+<link rel="icon" type="image/png" sizes="32x32" href="../images/icon-32.png">
+<link rel="canonical" href="https://cutout.design/privacy/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Cutout">
+<meta property="og:url" content="https://cutout.design/privacy/">
+<meta property="og:title" content="Cutout privacy">
+<meta property="og:description" content="${desc}">
+<meta property="og:image" content="https://cutout.design/images/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+${preTheme}
+${style.replace('</style>', `
+  /* Privacy page (scripts/build-guide.mjs) */
+  .policy { padding-top: 48px; padding-bottom: 96px; }
+${docStyle}
+  .doc h1 + p { color: var(--muted); margin-top: -8px; }
+  @media (max-width: 900px) { .policy { padding-top: 32px; } }
+</style>`)}
+</head>
+<body>
+${oneDown(between(site, '<header class="nav">', '</header>'), 'privacy')}
+<main class="wrap policy">
+  <article class="doc">
+${marked.parse(md)}
+  </article>
+</main>
+${oneDown(between(site, '<footer>', '</footer>'), 'privacy')}
+<script>
+${theme}
+</script>
+</body>
+</html>
+`;
+  fs.mkdirSync(path.join(out, 'privacy'), { recursive: true });
+  fs.writeFileSync(path.join(out, 'privacy/index.html'), page);
+  console.log(`privacy: ${ids.size} headings -> ${path.join(out, 'privacy/index.html')}`);
+}

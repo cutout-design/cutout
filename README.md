@@ -57,6 +57,8 @@ The one time Cutout goes online is when you paste a normal Figma copy that conta
 
 Your settings (theme, tolerances and so on) stay on your computer. Dragging a layer out writes a temporary PNG file, which Cutout deletes again.
 
+The full privacy policy, including the website and the browser version, is at [cutout.design/privacy](https://cutout.design/privacy/).
+
 ## Build from source
 
 Requires [Node.js](https://nodejs.org/) (LTS).
