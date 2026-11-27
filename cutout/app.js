@@ -4186,6 +4186,9 @@
   }
   new ResizeObserver(resize).observe(stage);
   window.addEventListener('resize', resize);
+  // Phones and tablets (touch only, no mouse): the web version opens, but Cutout needs a mouse and keyboard
+  if (!Platform.isNative && window.matchMedia('(hover: none) and (pointer: coarse)').matches)
+    setTimeout(() => toast('Cutout needs a computer with a mouse and keyboard'), 600);
   // Moving the window to a monitor with different display scaling changes devicePixelRatio
   // without resizing anything — watch for it so clicks and rendering stay aligned.
   (function watchDpr() {

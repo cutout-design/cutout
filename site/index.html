@@ -33,6 +33,7 @@
   a { color: var(--accent); text-decoration: none; }
   a:hover { text-decoration: underline; }
   img { max-width: 100%; height: auto; display: block; }
+  body { text-wrap: pretty; } /* no single word left alone on a last line (inherited by all text) */
   picture { display: block; }
   .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
@@ -54,6 +55,8 @@
   .btn.primary:hover { background: #0a85e0; }
   .btn.ghost { border-color: var(--btn-line); color: var(--text); background: var(--btn-bg); box-shadow: var(--btn-shadow, none); }
   .btn.ghost:hover { background: var(--hover); }
+  /* Phones and tablets (touch only): the browser version needs a mouse and keyboard, so no button for it in the hero */
+  @media (hover: none) and (pointer: coarse) { .desktop-only { display: none; } }
   .btn.small { height: 34px; padding: 0 14px; font-size: 14px; }
   .btn svg { width: 17px; height: 17px; }
 
@@ -61,8 +64,8 @@
   .hero { padding: 88px 0 40px; text-align: center; position: relative; overflow: hidden; }
   .hero::before { content: ""; position: absolute; inset: -40% -10% auto; height: 620px; background: radial-gradient(closest-side, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent); z-index: -1; }
   .eyebrow { display: inline-block; font-size: 13px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); padding: 5px 12px; border-radius: 999px; margin-bottom: 22px; }
-  h1 { font-size: clamp(38px, 6vw, 64px); line-height: 1.05; letter-spacing: -.035em; margin: 0 auto 20px; max-width: 17ch; font-weight: 750; }
-  .lede { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 40ch; margin: 0 auto 32px; }
+  h1 { font-size: clamp(38px, 6vw, 64px); line-height: 1.05; letter-spacing: -.035em; margin: 0 auto 20px; max-width: 17ch; font-weight: 750; text-wrap: balance; }
+  .lede { font-size: clamp(17px, 2vw, 20px); color: var(--muted); max-width: 60ch; margin: 0 auto 32px; text-wrap: balance; }
   .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
   .fine { margin-top: 16px; font-size: 13.5px; color: var(--faint); }
   .shot { margin: 56px auto 0; max-width: 1040px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); background: var(--bg-soft); }
@@ -71,8 +74,7 @@
   section { padding: 96px 0; }
   section.soft { background: var(--bg-soft); border-block: 1px solid var(--line); }
   h2 { font-size: clamp(28px, 3.6vw, 40px); letter-spacing: -.025em; line-height: 1.12; margin: 0 0 14px; font-weight: 720; }
-  .sub { color: var(--muted); font-size: 18px; max-width: 60ch; margin: 0 0 48px; text-wrap: balance; }
-  #privacy .sub { max-width: 92ch; }
+  .sub { color: var(--muted); font-size: 18px; max-width: 60ch; margin: 0 0 48px; }
   .center { text-align: center; } .center .sub { margin-inline: auto; }
 
   /* demos */
@@ -159,13 +161,13 @@
   <div class="hero">
     <div class="wrap">
       <h1>Quick image fixes that fit the way you work</h1>
-      <p class="lede">Cut out backgrounds, clean up screenshots, and line up layers, then copy the result back into your design.</p>
+      <p class="lede">Cut out backgrounds, clean up screenshots, and line&nbsp;up layers, then copy the result back into your design.</p>
       <div class="cta">
         <a class="btn primary" href="#download" id="heroDl">
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10m0 0-4-4m4 4 4-4M4 16h12"/></svg>
           <span>Download Cutout</span>
         </a>
-        <a class="btn ghost" href="https://app.cutout.design/">Use It in Your Browser</a>
+        <a class="btn ghost desktop-only" href="https://app.cutout.design/">Use It in Your Browser</a>
       </div>
       <p class="fine">Free for Windows and Mac</p>
       <picture class="shot">
@@ -272,7 +274,7 @@
         </div>
         <div class="card" data-os="web">
           <h3><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M2.5 10h15M10 2.5c2.2 2.2 2.2 12.8 0 15M10 2.5c-2.2 2.2-2.2 12.8 0 15"/></svg>Browser</h3>
-          <p>Works in Chrome, Edge, and other Chromium browsers.</p>
+          <p>Works in Chrome, Edge, and other Chromium browsers. Desktop only.</p>
           <div class="links"><a class="btn primary small" href="https://app.cutout.design/">Open</a></div>
         </div>
       </div>
@@ -318,7 +320,8 @@
   // Point the main button at the visitor's platform
   const DL = 'https://github.com/cutout-design/cutout/releases/download/v__VERSION__', WIN_URL = DL + '/Cutout-__VERSION__.exe', MAC_URL = DL + '/Cutout-__VERSION__.zip'; // the version placeholders are filled in at deploy (.github/workflows/website.yml)
   (() => {
-    const ua = navigator.userAgent, mac = /Macintosh|Mac OS X/.test(ua), win = /Windows/.test(ua);
+    // An iPad asks for the desktop site and says "Macintosh"; it has touch points, a Mac doesn't
+    const ua = navigator.userAgent, mac = /Macintosh|Mac OS X/.test(ua) && navigator.maxTouchPoints < 2, win = /Windows/.test(ua);
     const os = mac ? 'mac' : win ? 'win' : null;
     if (!os) return;
     // One click: the hero button downloads the right file (links filled in once releases are public)

@@ -319,6 +319,8 @@ Cutout comes as a desktop app for Windows (x64 and ARM64, each with its own inst
 | Title bar follows the theme | Yes | Partly |
 | Warning on closing with unsaved changes | Yes | Yes |
 
+Cutout needs a mouse (or trackpad) and a keyboard, so it doesn't work on phones and tablets; there the web version says so when it opens.
+
 The web version has also been lightly tested in Firefox and in WebKit, the engine behind Safari (not in Safari itself). In both, Save always downloads the file, the eyedropper (I) opens the color picker instead of picking from anywhere on screen, and dragging a layer out of the window doesn't work. In WebKit, copying pixels to the clipboard didn't work, and Figma layers with a blur aren't pasted.
 
 On a Mac, the desktop app has a standard menu bar (Cutout, Edit, Window), and Cut, Copy, Paste, Undo and Select All work from it too.
