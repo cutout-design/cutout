@@ -14,12 +14,11 @@ body:
     id: where
     attributes:
       label: Where
+      # Not required: GitHub preselects the first option of a required dropdown, and Mac bugs would be filed as Windows
       options:
         - Windows
         - Mac
         - Web version
-    validations:
-      required: true
   - type: input
     id: browser
     attributes:
