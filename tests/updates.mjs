@@ -91,8 +91,9 @@ export default async function updateTests({ electron, here, wait }) {
     if (process.platform === 'win32') {
       await menuItem('Check for Updates'); await until(`!!document.querySelector('#dlgUpdate[open]')`, 5000);
       await press('Download Update');
-      const ready = await until(`!!document.querySelector('#dlgUpdateReady[open]')`, 20000);
-      d = await openDialog();
+      // 60 s: antivirus may scan the downloaded file first
+      const ready = await until(`!!document.querySelector('#dlgUpdateReady[open]')`, 60000);
+      d = (await openDialog()) || 'no dialog; message: ' + await ev(`document.querySelector('#toast').textContent`);
       check('Download Update downloads it, then offers Restart to Update', ready && d === 'dlgUpdateReady: Cutout 99.0.0 is ready | Restart Cutout to finish updating.', d);
       check('the download came from the update server, with the same plain headers', requests.some(r => r.url.startsWith('/' + file))
         && requests.every(r => r.headers['user-agent'] === 'Cutout' && !r.headers['x-user-staging-id']));
