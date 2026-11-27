@@ -5,7 +5,7 @@ What's new in each version of Cutout. The section for a version becomes its rele
 ## Unreleased
 
 - Pasting SVG markup (Figma's Copy as SVG) is safer: Cutout reads the size straight from the SVG and lets the browser draw it as an image, without loading the markup as a document. SVG that declares entities is refused, and text made to look like many comments before an SVG can no longer freeze the window.
-- Each release file now comes with build provenance, a signed record that it was built from this repository. SECURITY.md explains how to check a download.
+- Each release now lists SHA-256 checksums of its files, and each file comes with build provenance, a signed record that it was built from this repository. SECURITY.md explains how to check a download.
 
 ## 1.3.5 (2026-11-26)
 

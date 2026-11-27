@@ -95,11 +95,15 @@ jobs:
           pkg=$(node -p "require('./package.json').version")
           web=$(sed -n "s/.*CUTOUT_VERSION = '\([^']*\)'.*/\1/p" cutout/version.js)
           if [ "$pkg" != "$version" ] || [ "$web" != "$version" ]; then echo "Version mismatch: tag $version, package.json $pkg, cutout/version.js $web" >&2; exit 1; fi
+          # SHA-256 checksums of the three files, so a download can be checked (see SECURITY.md).
+          (cd out && sha256sum "Cutout-$version.exe" "Cutout-$version-arm64.exe" "Cutout-$version.zip" > SHA256SUMS.txt)
+          cat out/SHA256SUMS.txt
           # Same file names on both platforms; the label shown on the release page says which is which.
           gh release create "$GITHUB_REF_NAME" \
             "out/Cutout-$version.exe#Cutout $version for Windows (x64)" \
             "out/Cutout-$version-arm64.exe#Cutout $version for Windows (ARM64)" \
             "out/Cutout-$version.zip#Cutout $version for Mac" \
+            "out/SHA256SUMS.txt#Checksums (SHA-256)" \
             --repo "$GITHUB_REPOSITORY" \
             --title "Cutout $version" \
             --notes-file notes.md

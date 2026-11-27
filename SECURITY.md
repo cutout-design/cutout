@@ -20,7 +20,14 @@ Only the latest release gets fixes. Updating to it is the way to get them.
 
 ## Checking a download
 
-The installers aren't code-signed yet. Starting with the next release after 1.3.5, each release file comes with build provenance: a signed record from GitHub that the file was built by this repository's release workflow from the release's tag. With the [GitHub CLI](https://cli.github.com/) installed, check a file with:
+The installers aren't code-signed yet. Starting with the next release after 1.3.5, there are two ways to check that a download is the file the release workflow built.
+
+**Checksum.** Each release lists the SHA-256 checksum of every file in `SHA256SUMS.txt`. Compute your download's checksum and compare it with the line for that file:
+
+- Windows (PowerShell): `Get-FileHash Cutout-1.3.6.exe`
+- Mac (Terminal): `shasum -a 256 Cutout-1.3.6.zip`
+
+**Build provenance.** Each file also comes with a signed record from GitHub that it was built by this repository's release workflow from the release's tag. With the [GitHub CLI](https://cli.github.com/) installed, check a file with:
 
 ```bash
 gh attestation verify Cutout-1.3.6.exe --repo cutout-design/cutout
