@@ -3633,7 +3633,6 @@
     copy: () => copy(false),
     save: () => save(false),
     originalSize,
-    deleteLayer: deleteSelectedLayers,
     selDelete: deleteSelectionPixels,
     copyToLayer: () => selToLayer(false),
     cutToLayer: () => selToLayer(true),

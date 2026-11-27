@@ -22,6 +22,9 @@ window.moreTests = async () => {
   const saved = { ...S.opts };
 
   try {
+    // The Layers panel header has no buttons (a trash can there looked like Delete all)
+    check('layers header has no buttons', !document.querySelector('.panel-head button'));
+
     reset();
     C.addImageLayer(image(200, 100, g => { g.fillStyle = '#ffffff'; g.fillRect(0, 0, 200, 100); g.fillStyle = '#ff0000'; g.fillRect(0, 0, 10, 10); }), 'Paper'); await wait(20);
 

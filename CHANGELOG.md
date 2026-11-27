@@ -2,6 +2,10 @@
 
 What's new in each version of Cutout. The section for a version becomes its release notes on GitHub.
 
+## Unreleased
+
+- The trash button at the top of the Layers panel is gone: it deleted only the selected layers but looked like Delete all. Delete layers with the Delete key or the right-click menu, as in Figma.
+
 ## 1.3.4 (2026-11-26)
 
 - Cutout is now free and open source under the MIT license.

@@ -107,7 +107,7 @@ Every pasted or opened image is a layer. The Layers panel lists them top first.
 - **Show or hide**: the eye on each row.
 - **Rename**: double-click the name, press F2, or right-click → Rename. Enter keeps the name, Esc cancels.
 - **Reorder**: drag rows up or down. Or use Ctrl+] / Ctrl+[ (forward / backward) and Ctrl+Shift+] / Ctrl+Shift+[ (to front / to back).
-- **Delete**: the trash button at the top of the panel, or the Delete key.
+- **Delete**: the Delete key, or Delete in the right-click menu.
 - **Drag a row out of Cutout** to save that layer as a PNG file: onto the desktop, into a folder, or into Figma.
 - Hover over a row to see the layer's size and position.
 
