@@ -916,7 +916,16 @@
   /** Returns the SVG markup if the text is a whole SVG document (e.g. Figma's Copy as SVG). */
   function extractSvg(text) {
     const t = (text || '').trim();
-    return /^(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)*<svg[\s>]/i.test(t) && /<\/svg>$/i.test(t) ? t : null;
+    if (!/<\/svg>$/i.test(t)) return null;
+    // Skip an XML declaration and any comments before the <svg> tag. Done step by step: a single
+    // regular expression with a repeated comment group can take very long on crafted text.
+    let s = t.replace(/^<\?xml[^>]*>\s*/i, '');
+    while (s.startsWith('<!--')) {
+      const end = s.indexOf('-->', 4);
+      if (end < 0) return null;
+      s = s.slice(end + 3).trimStart();
+    }
+    return /^<svg[\s>]/i.test(s) ? t : null;
   }
   /** A normal Ctrl+C in Figma: Figma's own data, encoded inside HTML. */
   const isFigmaCopy = html => /\((figmeta|figma)\)|data-buffer=/.test(html || '');
@@ -955,18 +964,27 @@
     toast(`Pasted ${result.canvas.width} × ${result.canvas.height}`);
   }
   /** Renders SVG markup into a canvas at the chosen scale (vector, so 2× / 3× stay sharp). */
+  // The markup is never parsed into a document here: the sizes come straight from the <svg> tag, and
+  // the browser's image loader draws it, which never runs scripts or loads anything else.
   async function svgToCanvas(svg, scale) {
-    const doc = new DOMParser().parseFromString(svg, 'image/svg+xml'), root = doc.documentElement;
-    if (root.nodeName.toLowerCase() !== 'svg' || doc.querySelector('parsererror')) throw new Error('Not valid SVG');
-    if (!root.getAttribute('xmlns')) root.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    const vb = (root.getAttribute('viewBox') || '').split(/[\s,]+/).map(Number);
+    // Entity declarations can expand into huge text (a "billion laughs" file). Real SVGs from
+    // Figma, design tools and icon sets don't use them, so refuse.
+    if (/<!ENTITY/i.test(svg)) throw new Error('SVG with entities');
+    const m = /<svg\b[^>]*>/i.exec(svg);
+    if (!m) throw new Error('Not valid SVG');
+    let tag = m[0];
+    const attr = name => { const a = new RegExp(`\\s${name}\\s*=\\s*(["'])(.*?)\\1`, 'i').exec(tag); return a ? a[2] : null; };
+    const vb = (attr('viewBox') || '').trim().split(/[\s,]+/).map(Number);
     const px = v => (/^\s*[\d.]+(px)?\s*$/.test(v || '') ? parseFloat(v) : NaN); // ignore %, em…
-    let w = px(root.getAttribute('width')), h = px(root.getAttribute('height'));
+    let w = px(attr('width')), h = px(attr('height'));
     if (Number.isNaN(w)) w = vb.length === 4 ? vb[2] : 300;
     if (Number.isNaN(h)) h = vb.length === 4 ? vb[3] : 150;
-    root.setAttribute('width', w);
-    root.setAttribute('height', h);
-    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(doc)], { type: 'image/svg+xml' }));
+    // Give the tag a namespace (needed to load as an image) and the exact width and height.
+    tag = tag.replace(/\s(width|height)\s*=\s*(["']).*?\2/gi, '');
+    if (!/\sxmlns\s*=/i.test(tag)) tag = tag.replace(/^<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+    tag = tag.replace(/^<svg\b/i, `<svg width="${w}" height="${h}"`);
+    const markup = svg.slice(0, m.index) + tag + svg.slice(m.index + m[0].length);
+    const url = URL.createObjectURL(new Blob([markup], { type: 'image/svg+xml' }));
     try {
       const img = new Image();
       img.src = url;

@@ -119,6 +119,30 @@ window.moreTests = async () => {
     check('undo puts the artboard back', S.artboard.w === 100 && S.artboard.h === 100, `${S.artboard.w}x${S.artboard.h}`);
     $('#cw').value = '50'; dlg.returnValue = ''; dlg.showModal(); dlg.close('cancel'); await wait(20);
     check('Cancel changes nothing', S.artboard.w === 100);
+
+    // Pasting SVG markup (Copy as SVG): read without parsing it into a document
+    const pasteSvg = async text => {
+      reset(); const dt = new DataTransfer(); dt.setData('text/plain', text);
+      const t0 = performance.now();
+      document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+      await wait(0); const ms = performance.now() - t0; // a slow check blocks the page before this timer runs
+      for (let i = 0; i < 40 && !S.layers.length; i++) await wait(20);
+      return { layer: S.layers[0], ms, toast: $('#toast').textContent };
+    };
+    const px = (l, x, y) => [...C.ctx2d(l.canvas).getImageData(x, y, 1, 1).data];
+    let r = await pasteSvg('<?xml version="1.0" encoding="UTF-8"?>\n<!-- Generator: test -->\n<svg width="40" height="30" viewBox="0 0 40 30" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="30" fill="#FF0000"/></svg>');
+    check('SVG paste: size from width and height', r.layer && r.layer.canvas.width === 40 && r.layer.canvas.height === 30, r.layer ? `${r.layer.canvas.width}x${r.layer.canvas.height}` : 'no layer');
+    check('SVG paste: draws the shapes', r.layer && px(r.layer, 20, 15).join() === '255,0,0,255', r.layer ? px(r.layer, 20, 15).join() : '');
+    r = await pasteSvg('<svg viewBox="0 0 64 32"><circle cx="16" cy="16" r="16" fill="blue" stroke-width="3"/></svg>');
+    check('SVG paste: no namespace, size from viewBox', r.layer && r.layer.canvas.width === 64 && r.layer.canvas.height === 32, r.layer ? `${r.layer.canvas.width}x${r.layer.canvas.height}` : 'no layer');
+    window.__svgRan = false;
+    r = await pasteSvg('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" onload="window.__svgRan=true"><script>window.__svgRan=true</script><rect width="10" height="10" fill="red"/></svg>');
+    check('SVG paste: scripts in the markup never run', r.layer && window.__svgRan === false, `ran ${window.__svgRan}`);
+    r = await pasteSvg('<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY a "aaaaaaaaaa"><!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">]><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><text>&b;</text></svg>');
+    check('SVG paste: entity declarations are refused', !r.layer, r.toast);
+    // The old check doubled its time with each comment: 40 of them froze the window for hours
+    r = await pasteSvg('<!---->'.repeat(40) + 'x</svg>');
+    check('SVG paste: crafted comment text is checked quickly', !r.layer && r.ms < 200, `${Math.round(r.ms)} ms`);
   } catch (e) {
     check('the suite ran to the end', false, e.message);
   } finally {

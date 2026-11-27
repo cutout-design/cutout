@@ -9,6 +9,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read # the builds only read the code; the release job asks for more below
+
 jobs:
   build:
     strategy:
