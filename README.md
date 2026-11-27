@@ -17,7 +17,7 @@ Remove a notification from a screenshot: draw a marquee around it, Smart fill it
 <img src="docs/images/window-dark.png" alt="The same window in the dark theme" width="49%">
 </p>
 
-Available as a desktop app for **Windows** (x64 and ARM64) and **Mac (Apple Silicon)**, and as a web page in any Chromium browser.
+Available as a desktop app for **Windows** (x64 and ARM64) and **Mac (Apple Silicon)**, and as a web page in any Chromium browser. Website: [cutout.design](https://cutout.design).
 
 ## Install
 
@@ -27,7 +27,7 @@ Download the latest version from [Releases](../../releases).
 
 **Mac (Apple Silicon)**: unzip `Cutout-<version>.zip` and move **Cutout.app** to Applications. The app isn't signed yet, so macOS says it "could not verify" Cutout the first time: click **Done**, then go to **System Settings → Privacy & Security**, click **Open Anyway** next to the Cutout message, and confirm. (Or run `xattr -dr com.apple.quarantine /Applications/Cutout.app` in Terminal.) You only need to do this once per version. Cutout appears in Finder's **Open With** menu for images; Preview stays the default.
 
-**Web version**: open `cutout/index.html` in Chrome or Edge. Everything works except reading the clipboard on its own (Ctrl+V still works), Open with, and the native save dialog.
+**Web version**: use it at [app.cutout.design](https://app.cutout.design) (always the latest release), or open `cutout/index.html` from the source in Chrome or Edge. Everything works except reading the clipboard on its own (Ctrl+V still works), Open with, and the native save dialog.
 
 ## What it does
 

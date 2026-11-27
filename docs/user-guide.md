@@ -307,7 +307,7 @@ Cutout remembers its settings (theme, tolerances, eraser size, marquee shape, pr
 
 ## Desktop app and web version
 
-Cutout comes as a desktop app for Windows (x64 and ARM64, each with its own installer) and Mac (Apple Silicon), and runs as a web page in Chrome, Edge and other Chromium browsers. Everything in this guide works in both, with these differences:
+Cutout comes as a desktop app for Windows (x64 and ARM64, each with its own installer) and Mac (Apple Silicon), and runs as a web page in Chrome, Edge and other Chromium browsers at [app.cutout.design](https://app.cutout.design). Everything in this guide works in both, with these differences:
 
 | | Desktop app | Web version |
 |---|---|---|

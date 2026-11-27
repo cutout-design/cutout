@@ -1,6 +1,11 @@
-# Publishes the website (cutout.design) with GitHub Pages: site/ at the root, and the browser version
-# of Cutout at /app, taken from the latest release (so the web app always matches the downloads).
-# The version placeholders in site/index.html become that release's version (download links, text).
+# Publishes the website (cutout.design) with GitHub Pages from site/. The version placeholders in
+# site/index.html become the latest release's version (download links, text). site/app/ only forwards
+# the old cutout.design/app address to app.cutout.design.
+#
+# The browser version of Cutout lives at app.cutout.design, served by the cutout-design/app repository.
+# The "app" job copies the release's cutout/ folder there, so the web app always matches the downloads.
+# It pushes with a deploy key (secret APP_DEPLOY_KEY; the public half is the app repo's only deploy key,
+# and its ruleset lets only that key and organization admins change it).
 #
 # Runs when the site changes on main, when a version tag is pushed (the release workflow builds the
 # downloads at the same time; the links work once it finishes), and by hand from the Actions tab.
@@ -38,8 +43,6 @@ jobs:
           echo "Site for $tag"
           mkdir -p _site
           cp -r site/. _site/
-          git archive "$tag" cutout | tar -x -C _site
-          mv _site/cutout _site/app
           sed -i "s/__VERSION__/$version/g" _site/index.html
           if grep -q "__VERSION__" _site/index.html; then echo "placeholder left" && exit 1; fi
       - uses: actions/configure-pages@v6
@@ -56,3 +59,36 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+  app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # tags
+      - name: Publish the browser version to cutout-design/app
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOY_KEY: ${{ secrets.APP_DEPLOY_KEY }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then tag="$GITHUB_REF_NAME"; else tag=$(gh release view --json tagName --jq .tagName); fi
+          version="${tag#v}"
+          if [ -z "$DEPLOY_KEY" ]; then echo "APP_DEPLOY_KEY secret missing" && exit 1; fi
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/app_key && chmod 600 ~/.ssh/app_key
+          # GitHub's published SSH host key, so the push only ever goes to github.com.
+          echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/app_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
+          git clone --depth 1 git@github.com:cutout-design/app.git ../app
+          cd ../app
+          # Replace the app files; the app repo's own README, .nojekyll and CNAME (its Pages domain) stay.
+          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name README.md ! -name .nojekyll ! -name CNAME -exec rm -rf {} +
+          git -C "$GITHUB_WORKSPACE" archive "$tag" cutout | tar -x --strip-components=1
+          git -C "$GITHUB_WORKSPACE" show "$tag:LICENSE" > LICENSE
+          if ! grep -q "'$version'" version.js; then echo "version.js doesn't say $version" && exit 1; fi
+          git add -A
+          if git diff --cached --quiet; then echo "app.cutout.design already has $version"; exit 0; fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Cutout $version browser version" -m "From cutout-design/cutout $tag ($(git -C "$GITHUB_WORKSPACE" rev-parse --short "$tag^{commit}"))"
+          git push origin HEAD:main
+          echo "Published $version to app.cutout.design"
