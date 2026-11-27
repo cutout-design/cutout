@@ -9,7 +9,7 @@ What's new in each version of Cutout. The section for a version becomes its rele
 - Keyboard and screen reader support: Tab reaches every button, field and layer row with a visible focus ring; menus work with the arrow keys, Enter and Esc; Control+Return (or the Menu key or Shift+F10 on Windows) opens the canvas's right-click menu; screen readers hear control names, states and Cutout's messages. Mouse use is unchanged.
 - With reduced motion turned on in the system, the marching ants stand still and the panels don't animate.
 - Pasting from Figma: a layer filled with extremely small image tiles no longer freezes the window; Cutout asks for Copy as PNG instead.
-- The web version works in Firefox too (checked with the full test suite). Save downloads the file there, and the eyedropper opens the color picker.
+- The web version has been lightly tested in Firefox and in WebKit, the engine behind Safari. Save downloads the file there, and the eyedropper opens the color picker.
 - Pasting from Figma in a browser that can't draw blur: layers with a layer or background blur are refused (with the usual Copy as PNG hint) instead of pasting sharp.
 - Updated to Electron 45.5.0 (Chromium 156 with its latest security fixes).
 
