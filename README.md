@@ -1,5 +1,9 @@
 # Cutout
 
+[![Latest release](https://img.shields.io/github/v/release/cutout-design/cutout?label=release)](https://github.com/cutout-design/cutout/releases/latest)
+[![Tests](https://github.com/cutout-design/cutout/actions/workflows/tests.yml/badge.svg)](https://github.com/cutout-design/cutout/actions/workflows/tests.yml)
+[![MIT license](https://img.shields.io/github/license/cutout-design/cutout)](LICENSE)
+
 A lightweight raster scratchpad for designers.
 
 Cutout handles the quick bitmap fixes that come up while designing in Figma: cut out a background, pull part of an image onto its own layer, fill, erase, scale, line things up, then copy the result back to Figma or save it as PNG or JPEG. It works like Fireworks and Sketch (select things directly, move them directly) and stays deliberately small: no project files, no Photoshop-style complexity. Paste, fix, copy back.

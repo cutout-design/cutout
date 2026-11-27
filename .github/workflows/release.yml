@@ -65,12 +65,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write # build provenance (below)
+      attestations: write
     steps:
       - uses: actions/checkout@v7 # for CHANGELOG.md
       - uses: actions/download-artifact@v8
         with:
           path: out
           merge-multiple: true
+      # Signed proof that these files were built by this workflow from this tag. Anyone can check a
+      # download with: gh attestation verify <file> --repo cutout-design/cutout
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            out/Cutout-*.exe
+            out/Cutout-*.zip
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
