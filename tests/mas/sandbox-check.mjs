@@ -77,7 +77,8 @@ async function until(ev, expr, ms = 10000) {
   return false;
 }
 
-/* ---------- the system Save panel, driven with keystrokes: Go to folder, then the file name */
+/* ---------- the system Save panel, driven with keystrokes: Go to folder, then the file name. The panel
+   hides extensions, so the name is typed without one (typing "a.png" saved "a.png.png"). */
 function answerSavePanel(dir, name) {
   const q = s => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   const r = osa(`
@@ -137,7 +138,7 @@ try {
   // Save: the real Save panel; in the sandbox it grants this one file only.
   const target = path.join(out, 'saved.png');
   check('Save opens the format dialog', (await ev(pressSave(false, 'png', 'saved'))) === 'ok');
-  const panel = answerSavePanel(out, 'saved.png');
+  const panel = answerSavePanel(out, 'saved');
   if (panel) check('the Save panel could be answered', false, panel);
   check('Save writes the file the Save panel chose', await until(ev, `${toast}.startsWith('Saved saved.png')`, 15000) && magic(target, [137, 80, 78, 71]),
     `${await ev(toast)}; ${fs.existsSync(target) ? fs.statSync(target).size + ' bytes' : 'no file'}`);
@@ -155,7 +156,7 @@ try {
   // Save as JPEG: a second file in the same folder.
   const jpg = path.join(out, 'photo.jpg');
   check('Save as opens the format dialog', (await ev(pressSave(true, 'jpeg', 'photo'))) === 'ok');
-  const panel2 = answerSavePanel(out, 'photo.jpg');
+  const panel2 = answerSavePanel(out, 'photo');
   if (panel2) check('the Save panel could be answered (Save as)', false, panel2);
   check('Save as JPEG writes a JPEG', await until(ev, `${toast}.startsWith('Saved photo.jpg')`, 15000) && magic(jpg, [0xff, 0xd8, 0xff]),
     `${await ev(toast)}; ${fs.existsSync(jpg) ? fs.statSync(jpg).size + ' bytes' : 'no file'}`);
@@ -170,7 +171,12 @@ try {
   check('https downloads work (Figma images)', net === 200, String(net));
 
   // Settings: kept in the container across a relaunch (window.json for the theme, localStorage for prefs).
-  await ev("cutoutNative.setTheme('dark'); localStorage.setItem('cutout.sandboxCheck', 'kept'); 1");
+  await ev(`(() => { // as Cutout ▾ > Dark does: the page's prefs (localStorage) and the native title bar (window.json)
+    Cutout.state.opts.theme = 'dark';
+    localStorage.setItem('cutout.prefs.v1', JSON.stringify(Cutout.state.opts));
+    cutoutNative.setTheme('dark');
+    localStorage.setItem('cutout.sandboxCheck', 'kept');
+    return 1; })()`);
   await wait(500);
   await ev("window.onbeforeunload = null; 1");
   s.ws.close(); s = null;
@@ -179,7 +185,8 @@ try {
   s = await launch(port2);
   check('it starts again after quitting', !!s);
   if (s) {
-    check('settings are kept (theme)', await until(s.ev, "matchMedia('(prefers-color-scheme: dark)').matches", 5000));
+    check('settings are kept (theme)', await until(s.ev, "document.documentElement.dataset.theme === 'dark' && matchMedia('(prefers-color-scheme: dark)').matches", 5000),
+      await s.ev("document.documentElement.dataset.theme + ', system dark: ' + matchMedia('(prefers-color-scheme: dark)').matches"));
     check('settings are kept (preferences)', (await s.ev("localStorage.getItem('cutout.sandboxCheck')")) === 'kept');
     check('settings live in the container', fs.existsSync(container) && execFileSync('find', [container, '-name', 'window.json']).toString().trim() !== '');
   }
