@@ -66,7 +66,7 @@ npm run dist:mac   # Mac app (on a Mac) → dist/
 npm test           # run the tests (starts Cutout and drives it)
 ```
 
-The app itself is plain HTML, CSS and JavaScript in `cutout/`, with no build step. The desktop app uses Electron (`main.js`, `preload.js`). The tests in `tests/` start Cutout and use it like a person would (clicks, keys, pastes) on made-up images; GitHub Actions runs them on every change. Releases are built automatically when a version tag is pushed; see `CHANGELOG.md` for what changed in each version. To report a security problem, see [SECURITY.md](SECURITY.md).
+The app itself is plain HTML, CSS and JavaScript in `cutout/`, with no build step. The desktop app uses Electron (`main.js`, `preload.js`). The tests in `tests/` start Cutout and use it like a person would (clicks, keys, pastes) on made-up images; GitHub Actions runs them on every change. Releases are built automatically when a version tag is pushed; see `CHANGELOG.md` for what changed in each version. To report a bug, suggest an idea or send a change, see [CONTRIBUTING.md](CONTRIBUTING.md). To report a security problem, see [SECURITY.md](SECURITY.md).
 
 ## License
 
