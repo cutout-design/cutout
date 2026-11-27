@@ -1,4 +1,5 @@
-# Publishes the website (cutout.design) with GitHub Pages from site/. The version placeholders in
+# Publishes the website (cutout.design) with GitHub Pages from site/, plus the user guide page at /guide/
+# (scripts/build-guide.mjs, from the latest release's docs/user-guide.md). The version placeholders in
 # site/index.html become the latest release's version (download links, text). site/app/ only forwards
 # the old cutout.design/app address to app.cutout.design.
 #
@@ -14,7 +15,7 @@ name: Website
 on:
   push:
     branches: [main]
-    paths: ['site/**', '.github/workflows/website.yml']
+    paths: ['site/**', 'scripts/build-guide.mjs', '.github/workflows/website.yml']
     tags: ['v*']
   workflow_dispatch:
 
@@ -45,6 +46,10 @@ jobs:
           cp -r site/. _site/
           sed -i "s/__VERSION__/$version/g" _site/index.html
           if grep -q "__VERSION__" _site/index.html; then echo "placeholder left" && exit 1; fi
+          # The user guide page (/guide/), from the release's docs/ so it matches the downloads
+          npm install --prefix "$RUNNER_TEMP/marked" --no-save --no-audit --no-fund marked@18.2.1
+          git archive "$tag" docs | tar -x -C "$RUNNER_TEMP"
+          MARKED="$RUNNER_TEMP/marked/node_modules/marked" GUIDE_DOCS="$RUNNER_TEMP/docs" node scripts/build-guide.mjs _site
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
