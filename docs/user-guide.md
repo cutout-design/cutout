@@ -71,6 +71,7 @@ How images are placed:
 ## Moving around
 
 - **Pan**: scroll (two-finger scroll on a trackpad), Shift+scroll to pan sideways, hold **Space** and drag, or drag with the middle mouse button.
+- **Auto-scroll**: while you drag a marquee, move layers or drag a selection box around layers, bring the pointer to the edge of the canvas (or past it) and the view scrolls that way, faster the further out you go. Hold the pointer still and it keeps going until the artboard's edge comes into view.
 - **Zoom**: Ctrl+scroll or pinch, zooming toward the cursor. Or use Ctrl+= and Ctrl+−, the − and + buttons in the status bar, or Ctrl+0 to fit the artboard in the window (also the **Fit** button). Ctrl+1, or clicking the zoom percentage, goes to 100%.
 
 There's no Hand tool on purpose: Space and scrolling are always available, whatever tool you're using.
@@ -149,7 +150,7 @@ Selections stay inside the artboard, as in Fireworks: drag past an edge to selec
 
 ## Marquee tool (M)
 
-Drag to select a rectangle. The size shows in the options bar while you drag.
+Drag to select a rectangle. The size shows in the options bar while you drag. To select more than fits in the window, drag to the edge of the canvas: the view scrolls and the selection keeps growing.
 
 Selection shape (options bar):
 
