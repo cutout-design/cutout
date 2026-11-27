@@ -1,0 +1,93 @@
+# Builds Cutout for Windows and Mac when a version tag (v1.2.3) is pushed, and publishes a GitHub Release
+# with the Windows installer and the Mac app attached. Pull requests (e.g. Dependabot updates) and runs
+# by hand (Actions tab) only build, to check that everything still builds; they don't release.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - name: windows-x64
+            os: windows-latest
+            script: dist
+            files: |
+              dist/Cutout-*.exe
+          - name: windows-arm64 # built on an x64 runner; no native modules, so cross-building works
+            os: windows-latest
+            script: dist:arm64
+            files: |
+              dist/Cutout-*-arm64.exe
+          - name: mac-arm64 # Apple Silicon
+            os: macos-latest
+            script: dist:mac
+            files: |
+              dist/*.zip
+    name: build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      # The Mac icon is an Icon Composer file (installer/Cutout.icon): compiling it needs Xcode 26's actool.
+      - name: Use Xcode 26 or newer
+        if: runner.os == 'macOS'
+        run: |
+          x=$(ls -d /Applications/Xcode_2[6-9]*.app /Applications/Xcode_[3-9][0-9]*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$x" ]; then echo "No Xcode 26 or newer on this runner"; ls -d /Applications/Xcode*.app; exit 1; fi
+          sudo xcode-select -s "$x"
+          xcrun actool --version | head -5
+      - run: npm ci
+      - name: Build
+        run: npm run ${{ matrix.script }} -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false' # no signing certificate yet (Mac build is ad-hoc signed)
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cutout-${{ matrix.name }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+          # Only needed to hand the files to the release job a few minutes later. Kept longer, every
+          # build (~110 MB each) counts against the organization's 0.5 GB of Actions storage.
+          retention-days: 1
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7 # for CHANGELOG.md
+      - uses: actions/download-artifact@v8
+        with:
+          path: out
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # Release notes = this version's section of CHANGELOG.md ("## 1.2.3 ..." up to the next "## ").
+          awk -v v="$version" 'index($0, "## " v) == 1 { f = 1; next } /^## / && f { exit } f' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then echo "No CHANGELOG.md section for $version" >&2; exit 1; fi
+          # The browser version shows cutout/version.js: it must match the tag and package.json.
+          pkg=$(node -p "require('./package.json').version")
+          web=$(sed -n "s/.*CUTOUT_VERSION = '\([^']*\)'.*/\1/p" cutout/version.js)
+          if [ "$pkg" != "$version" ] || [ "$web" != "$version" ]; then echo "Version mismatch: tag $version, package.json $pkg, cutout/version.js $web" >&2; exit 1; fi
+          # Same file names on both platforms; the label shown on the release page says which is which.
+          gh release create "$GITHUB_REF_NAME" \
+            "out/Cutout-$version.exe#Cutout $version for Windows (x64)" \
+            "out/Cutout-$version-arm64.exe#Cutout $version for Windows (ARM64)" \
+            "out/Cutout-$version.zip#Cutout $version for Mac" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Cutout $version" \
+            --notes-file notes.md

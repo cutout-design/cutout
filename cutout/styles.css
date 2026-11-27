@@ -1,0 +1,425 @@
+:root {
+  --bg: #f5f5f5;
+  --panel: #ffffff;
+  --border: #e3e3e3;
+  --control-border: #c4c4c4;
+  --text: #1e1e1e;
+  --muted: #737373;
+  --hover: #f0f0f0;
+  --pressed: #e4e4e4;
+  --accent: #0d99ff;
+  --accent-text: #ffffff;
+  --accent-soft: #e5f4ff;
+  --stage: #e6e6e6;
+  --stage-dim: rgba(230, 230, 230, 0.8);
+  --artboard-edge: rgba(0, 0, 0, 0.14);
+  --checker-a: #ffffff;
+  --checker-b: #e8e8e8;
+  --grid: rgba(0, 0, 0, 0.16);
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.18);
+  color-scheme: light;
+}
+
+/* Dark theme. data-theme is set on <html> by a tiny script in index.html (before first paint)
+   from the user's choice: System (follows Windows), Light or Dark. */
+:root[data-theme="dark"] {
+  --bg: #1e1e1e;
+  --panel: #2b2b2b;
+  --border: #3b3b3b;
+  --control-border: #5c5c5c;
+  --text: #ececec;
+  --muted: #9a9a9a;
+  --hover: #363636;
+  --pressed: #424242;
+  --accent-soft: rgba(13, 153, 255, 0.2);
+  --stage: #181818;
+  --stage-dim: rgba(24, 24, 24, 0.8);
+  --artboard-edge: rgba(255, 255, 255, 0.14);
+  --checker-a: #3c3c3c;
+  --checker-b: #303030;
+  --grid: rgba(255, 255, 255, 0.14);
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 12px/1.3 "Segoe UI", system-ui, -apple-system, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app {
+  display: grid;
+  grid-template-rows: 44px 36px 1fr 26px;
+  height: 100vh;
+}
+
+/* ---------- buttons & inputs */
+button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  height: 28px;
+  padding: 0 10px;
+  cursor: default;
+  white-space: nowrap;
+}
+button:hover:not(:disabled) { background: var(--hover); }
+button:active:not(:disabled) { background: var(--pressed); }
+button:disabled { opacity: 0.35; }
+button.primary { background: var(--accent); color: var(--accent-text); }
+button.primary:hover:not(:disabled) { background: #0b8ae6; }
+button.icon { width: 28px; padding: 0; display: inline-grid; place-items: center; }
+button.small { height: 22px; padding: 0 6px; }
+button.icon.small { width: 22px; padding: 0; } /* .small's side padding was pushing icons off-center */
+svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+svg .fill { fill: currentColor; stroke: none; }
+
+input[type="number"], input[type="text"] {
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  height: 24px;
+  padding: 0 6px;
+  width: 64px;
+  user-select: text;
+}
+input[type="number"]:focus, input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+select {
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  height: 24px;
+  padding: 0 4px;
+}
+input[type="range"] { width: 110px; accent-color: var(--accent); vertical-align: middle; }
+/* Own checkboxes/radios — Edge's built-in Windows-style ones render heavy and dark in light mode. */
+input[type="checkbox"], input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  margin: 0;
+  width: 15px;
+  height: 15px;
+  border: 1px solid var(--control-border);
+  border-radius: 4px;
+  background: var(--panel) center / 11px no-repeat;
+  transition: background-color 0.1s, border-color 0.1s;
+}
+input[type="radio"] { border-radius: 50%; }
+input[type="checkbox"]:hover, input[type="radio"]:hover { border-color: var(--accent); }
+input[type="checkbox"]:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3 4.9 8.6 9.4 3.8' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+input[type="radio"]:checked { border: 4.5px solid var(--accent); background: #fff; }
+input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label { display: inline-flex; align-items: center; gap: 6px; }
+.label, .muted { color: var(--muted); }
+kbd {
+  font: 11px "Segoe UI", system-ui, sans-serif;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 4px;
+  background: var(--panel);
+}
+
+/* ---------- top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.brand { font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 3px; padding: 0 6px 0 8px; margin-right: 4px; }
+.brand svg { width: 14px; height: 14px; color: var(--muted); }
+.menu-item .check { width: 16px; display: inline-block; color: var(--accent); }
+.menu-heading { padding: 6px 10px 4px; color: var(--muted); font-size: 11px; }
+.group { display: flex; align-items: center; gap: 2px; }
+.group .label { padding: 0 4px 0 2px; }
+.sep { width: 1px; height: 20px; background: var(--border); margin: 0 6px; }
+.spacer { flex: 1; }
+
+/* ---------- options bar
+ * Spacing scale: 6px inside a cluster (.grp), 16px between clusters (with a .vsep divider),
+ * 16px + divider between contexts (.opt). All controls are 24px tall. */
+.optionsbar {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+.optionsbar::-webkit-scrollbar { display: none; }
+.opt { display: none; flex: none; align-items: center; gap: 16px; }
+.opt.show { display: flex; }
+/* Divider between two visible contexts (e.g. wand settings | selection actions). */
+.opt.show ~ .opt.show { margin-left: 16px; }
+.opt.show ~ .opt.show::before { content: ""; width: 1px; height: 18px; background: var(--border); }
+.grp { display: flex; align-items: center; gap: 6px; }
+.grp.tight { gap: 2px; }
+/* bordered buttons in a tight group (Trim, Fit) need the normal cluster spacing, or their borders touch */
+.grp.tight:has(> button.outline + button.outline) { gap: 6px; }
+.vsep { width: 1px; height: 18px; background: var(--border); flex: none; }
+.optionsbar .label { white-space: nowrap; }
+.optionsbar .grp > .label:first-child { margin-right: 2px; }
+.optionsbar button { height: 24px; padding: 0 8px; }
+.optionsbar button.outline { border-color: var(--border); padding: 0 10px; }
+.optionsbar button.icon.small { width: 24px; height: 24px; }
+.optionsbar select { height: 24px; padding: 0 4px 0 6px; }
+#mqStyle { min-width: 104px; }
+.field { gap: 5px; color: var(--muted); }
+.field input { color: var(--text); }
+.field.disabled { opacity: 0.4; }
+#spacingIcon { width: 14px; height: 14px; color: var(--muted); transition: transform 0.15s; }
+input.num { width: 58px; font-variant-numeric: tabular-nums; }
+input.num.narrow { width: 44px; }
+.readout { min-width: 40px; font-variant-numeric: tabular-nums; }
+.optionsbar input[type="range"] { width: 96px; }
+label.check { gap: 6px; }
+label.check input { margin: 0; }
+/* Segmented control (selection mode). */
+.seg { display: inline-flex; gap: 1px; padding: 1px; border: 1px solid var(--border); border-radius: 6px; }
+.optionsbar .seg button { width: 28px; height: 22px; padding: 0; display: grid; place-items: center; border-radius: 4px; color: var(--muted); }
+.optionsbar .seg button.on { background: var(--accent-soft); color: var(--accent); }
+.seg svg { width: 15px; height: 15px; stroke-width: 1.2; }
+.lock { color: var(--muted); }
+.lock.on { color: var(--accent); background: var(--accent-soft); }
+.more { display: inline-flex; align-items: center; gap: 2px; }
+.more svg { width: 14px; height: 14px; }
+.optionsbar[data-active-tool="bucket"] .fill-group .swatch,
+.optionsbar[data-active-tool="bucket"] .fill-group select { display: none; } /* the bucket's options already show them */
+.optionsbar[data-fill-with="smart"] .sel-swatch,
+.optionsbar[data-bucket-fill="smart"] .bucket-swatch { display: none; } /* no color for a smart fill */
+
+/* ---------- main area */
+.main {
+  display: grid;
+  grid-template-columns: 52px 1fr 232px;
+  min-height: 0;
+}
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+}
+.toolbar button { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; border-radius: 7px; }
+.toolbar button svg { width: 22px; height: 22px; stroke-width: 1.5; } /* 24-unit grid → ~1.4px lines */
+.toolbar button.active { background: var(--accent); color: var(--accent-text); }
+.swatch {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+/* Inner edge drawn on top, so a white swatch still reads on a white bar. */
+.swatch::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+  z-index: 2;
+}
+:root[data-theme="dark"] .swatch::before { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22); }
+/* Transparent background: show a checkerboard instead of the (unused) color. */
+.swatch.is-transparent::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-conic-gradient(var(--checker-b) 0 25%, var(--checker-a) 0 50%) 0 0 / 8px 8px;
+}
+.swatch.small { width: 20px; height: 20px; border-radius: 4px; }
+.swatch input { position: absolute; inset: -8px; width: 40px; height: 40px; border: 0; padding: 0; cursor: default; }
+
+.stage { position: relative; overflow: hidden; background: var(--stage); }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.stage.drop::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 2px dashed var(--accent);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+
+/* ---------- layers panel */
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  padding: 0 6px 0 12px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.layers { list-style: none; margin: 0; padding: 4px; overflow: auto; flex: 1; }
+.layer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 4px 0 6px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+}
+.layer:hover { background: var(--hover); }
+.layer.selected { background: var(--accent-soft); }
+.layer.active { border-color: var(--accent); }
+.layer.off .thumb, .layer.off .name { opacity: 0.4; }
+.layer.drop-above { box-shadow: inset 0 2px 0 var(--accent); }
+.layer.drop-below { box-shadow: inset 0 -2px 0 var(--accent); }
+.layer .thumb { width: 30px; height: 30px; border-radius: 3px; border: 1px solid var(--border); flex: none; }
+.layer .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.layer .name input { width: 100%; }
+.layer .eye { width: 24px; height: 24px; padding: 0; display: grid; place-items: center; color: var(--muted); opacity: 0; }
+.layer:hover .eye, .layer.off .eye { opacity: 1; }
+.layers .none { color: var(--muted); padding: 16px 8px; text-align: center; }
+
+/* ---------- status bar */
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 8px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+.zoom { display: flex; align-items: center; gap: 2px; }
+.zoom-label { height: 22px; min-width: 52px; padding: 0 4px; }
+.status-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.chip { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border); display: inline-block; }
+
+/* ---------- dialogs */
+dialog {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 0;
+  box-shadow: var(--shadow);
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.25); }
+.dlg { display: grid; gap: 14px; padding: 18px 20px; min-width: 320px; }
+.dlg h2 { margin: 0; font-size: 14px; }
+.dlg .row { display: flex; align-items: center; gap: 12px; }
+.dlg .grow { flex: 1; }
+.dlg .grow input { flex: 1; width: auto; }
+.dlg .seg { gap: 18px; }
+.dlg .note { margin: 0; color: var(--muted); line-height: 1.5; max-width: 300px; }
+.dlg.about { justify-items: center; text-align: center; gap: 6px; min-width: 240px; padding: 24px 24px 18px; }
+.dlg.about h2 { font-size: 16px; margin-top: 6px; }
+.dlg.about .actions { margin-top: 12px; }
+.actions { display: flex; flex-direction: row-reverse; gap: 8px; }
+.actions button { border-color: var(--border); min-width: 76px; }
+.actions button.primary { border-color: transparent; }
+.anchor { display: grid; grid-template-columns: repeat(3, 20px); gap: 3px; }
+.anchor button { width: 20px; height: 20px; padding: 0; border: 1px solid var(--border); border-radius: 3px; }
+.anchor button.on { background: var(--accent); border-color: var(--accent); }
+
+/* ---------- context menu */
+.menu {
+  position: fixed;
+  z-index: 10;
+  min-width: 220px;
+  padding: 4px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+.menu[hidden] { display: none; }
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  text-align: left;
+}
+.menu-item:hover:not(:disabled) { background: var(--accent); color: var(--accent-text); }
+.menu-item:hover:not(:disabled) .menu-key { color: var(--accent-text); }
+.menu-key { border: 0; background: none; padding: 0; color: var(--muted); font-size: 11px; }
+.menu-sep { height: 1px; background: var(--border); margin: 4px 6px; }
+
+/* ---------- toast */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 44px;
+  transform: translate(-50%, 8px);
+  /* Follows the theme: same surface as the panels, lifted with a border + shadow. */
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+  max-width: 70vw;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* hidden until the pointer is over a pixel (app.js shows and hides it) */
+#cursorChip { visibility: hidden; }
+
+/* ---------- accessibility */
+/* Keyboard focus is always visible (mouse clicks don't show it; buttons don't take focus on click) */
+button:focus-visible, select:focus-visible, input[type="range"]:focus-visible, .layer:focus-visible, #view:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+#view:focus-visible { outline-offset: -2px; }
+.swatch:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.menu-item:focus-visible { outline: none; background: var(--accent); color: var(--accent-text); }
+.menu-item:focus-visible .menu-key { color: var(--accent-text); }
+.layer .eye:focus-visible, .layer:focus-within .eye { opacity: 1; }
+/* Read by screen readers, not shown */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+/* Less motion when the system asks for it (the canvas's marching ants stop in app.js) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+/* a control focused by a click keeps no ring, even after a key press (app.js marks it) */
+.pointer-focus:focus-visible { outline: none; }
+#view.pointer-focus:focus-visible { outline: none; }

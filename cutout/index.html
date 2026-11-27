@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Content security policy: only Cutout's own scripts and styles run (no inline or generated code);
+     images come from the app, pasted data, and Figma's https links; the Smart fill worker is a blob. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; worker-src blob:; style-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https: data: blob:; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cutout</title>
+<!-- Pixel-snapped icons at each size (a single SVG gets rasterized small and stretched → blurry taskbar). -->
+<link rel="icon" href="icons/icon.ico" sizes="16x16 20x20 24x24 32x32 40x40 48x48 64x64 128x128 256x256">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/icon-48.png">
+<link rel="icon" type="image/png" sizes="256x256" href="icons/icon-256.png">
+<meta name="theme-color" content="#ffffff">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <button class="brand" id="appMenu" title="Cutout menu" aria-haspopup="menu" aria-expanded="false">Cutout
+      <svg viewBox="0 0 16 16"><path d="m4.5 6.5 3.5 3.5 3.5-3.5"/></svg>
+    </button>
+    <div class="group">
+      <button data-cmd="open" title="Open image (Ctrl+O)">Open</button>
+      <!-- Paste button: desktop app only (as a local page, Edge won't let a button read the clipboard;
+           Ctrl+V works there). app.js unhides it when Platform.canReadClipboard. -->
+      <button data-cmd="paste" id="btnPaste" title="Paste (Ctrl+V)" hidden>Paste</button>
+    </div>
+    <div class="sep"></div>
+    <div class="group">
+      <button class="icon" data-cmd="undo" id="btnUndo" title="Undo (Ctrl+Z)"><svg viewBox="0 0 16 16"><path d="M5 3 2 6l3 3M2.5 6H10a3.5 3.5 0 0 1 0 7H7"/></svg></button>
+      <button class="icon" data-cmd="redo" id="btnRedo" title="Redo (Ctrl+Shift+Z)"><svg viewBox="0 0 16 16"><path d="m11 3 3 3-3 3M13.5 6H6a3.5 3.5 0 0 0 0 7h3"/></svg></button>
+    </div>
+    <div class="spacer"></div>
+    <div class="group">
+      <button data-cmd="copy" title="Copy (Ctrl+C)">Copy</button>
+      <button class="primary" data-cmd="save" title="Save (Ctrl+S)">Save</button>
+    </div>
+  </header>
+
+  <div class="optionsbar">
+    <!-- Order: the current tool's settings first, then whatever is selected (artboard / layer / pixels).
+         Each .opt is one context; .grp = a cluster of related controls; .vsep = a divider between clusters. -->
+
+    <!-- Shared by both selection tools. Shift / Alt still work as temporary overrides. -->
+    <div class="opt" data-for="marquee wand">
+      <div class="seg" id="selModeSeg" role="group" aria-label="Selection mode">
+        <button data-mode="replace" title="New selection">
+          <svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="1" class="fill"/></svg>
+        </button>
+        <button data-mode="add" title="Add to selection (or hold Shift)">
+          <svg viewBox="0 0 16 16"><path d="M2.5 2.5h7v3h4v8h-8v-4h-3z" class="fill"/></svg>
+        </button>
+        <button data-mode="sub" title="Subtract from selection (or hold Alt)">
+          <svg viewBox="0 0 16 16"><path d="M2.5 2.5h7v3h-4v4h-3z" class="fill"/><rect x="6" y="6" width="7.5" height="7.5" rx=".5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="opt" data-for="marquee">
+      <div class="grp">
+        <select id="mqStyle" title="Selection shape">
+          <option value="normal">Free</option>
+          <option value="ratio">Aspect ratio</option>
+          <option value="size">Exact size</option>
+        </select>
+      </div>
+      <div class="grp" id="mqDims">
+        <input type="text" inputmode="decimal" class="num" id="mqW" title="Width">
+        <span class="label" id="mqSep">×</span>
+        <input type="text" inputmode="decimal" class="num" id="mqH" title="Height">
+        <span class="label" id="mqUnit">px</span>
+      </div>
+    </div>
+
+    <div class="opt" data-for="wand">
+      <div class="grp">
+        <span class="label">Tolerance</span>
+        <input type="range" id="wandTol" min="0" max="255" aria-label="Tolerance">
+        <input type="text" inputmode="numeric" class="num narrow" id="wandTolNum" aria-label="Tolerance">
+      </div>
+      <div class="vsep"></div>
+      <label class="check"><input type="checkbox" id="wandContig">Contiguous</label>
+      <div class="vsep"></div>
+      <div class="grp" title="Removes halos along edges">
+        <span class="label">Edge cleanup</span>
+        <select id="defringe" aria-label="Edge cleanup">
+          <option value="0">Off</option>
+          <option value="1">1 px</option>
+          <option value="2">2 px</option>
+          <option value="3">3 px</option>
+          <option value="4">4 px</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="opt" data-for="bucket">
+      <div class="grp">
+        <span class="label">Fill</span>
+        <select id="bucketFill" title="Fill with"><option value="color">Color</option><option value="smart">Smart</option></select>
+        <label class="swatch bucket-swatch" title="Fill color (I)"><input type="color" class="fill-color" aria-label="Fill color"></label>
+      </div>
+      <div class="vsep"></div>
+      <div class="grp">
+        <span class="label">Tolerance</span>
+        <input type="range" id="fillTol" min="0" max="255" aria-label="Tolerance">
+        <input type="text" inputmode="numeric" class="num narrow" id="fillTolNum" aria-label="Tolerance">
+      </div>
+      <div class="vsep"></div>
+      <label class="check"><input type="checkbox" id="fillContig">Contiguous</label>
+    </div>
+
+    <div class="opt" data-for="eraser">
+      <div class="grp">
+        <span class="label">Size</span>
+        <input type="range" id="eraserSize" min="1" max="300" aria-label="Eraser size">
+        <input type="text" inputmode="numeric" class="num narrow" id="eraserSizeNum" title="Brush size ([ and ] to change)">
+        <span class="label">px</span>
+      </div>
+    </div>
+
+    <div class="opt" id="artboardProps">
+      <div class="grp">
+        <span class="label">Artboard</span>
+        <label class="field">W <input type="text" inputmode="decimal" class="num" id="aw" title="Width"></label>
+        <button class="icon small lock" id="abLock" title="Keep proportions">
+          <svg viewBox="0 0 16 16"><path d="M6.6 9.4 9.4 6.6M7.2 4.6l.9-.9a2.6 2.6 0 0 1 3.7 3.7l-.9.9M8.8 11.4l-.9.9a2.6 2.6 0 0 1-3.7-3.7l.9-.9"/></svg>
+        </button>
+        <label class="field">H <input type="text" inputmode="decimal" class="num" id="ah" title="Height"></label>
+      </div>
+      <div class="vsep"></div>
+      <div class="grp">
+        <span class="label">Background</span>
+        <label class="swatch" id="abBgSwatch" title="Background color"><input type="color" id="abBg" value="#ffffff" aria-label="Background color"></label>
+        <label class="check"><input type="checkbox" id="abTransparent">Transparent</label>
+      </div>
+      <div class="vsep"></div>
+      <div class="grp tight">
+        <button class="outline" data-cmd="trim" title="Trim to content (Ctrl+Alt+T)" aria-label="Trim artboard to content">Trim</button>
+        <button class="outline" data-cmd="fit" title="Fit to layers (Ctrl+Alt+F)" aria-label="Fit artboard to layers">Fit</button>
+      </div>
+    </div>
+
+    <div class="opt" id="layerProps">
+      <div class="grp">
+        <label class="field">X <input type="text" inputmode="decimal" class="num" id="lx"></label>
+        <label class="field">Y <input type="text" inputmode="decimal" class="num" id="ly"></label>
+      </div>
+      <div class="vsep"></div>
+      <div class="grp">
+        <label class="field">W <input type="text" inputmode="decimal" class="num" id="lw" title="Width"></label>
+        <button class="icon small lock" id="lockRatio" title="Keep proportions when typing W or H">
+          <svg viewBox="0 0 16 16"><path d="M6.6 9.4 9.4 6.6M7.2 4.6l.9-.9a2.6 2.6 0 0 1 3.7 3.7l-.9.9M8.8 11.4l-.9.9a2.6 2.6 0 0 1-3.7-3.7l.9-.9"/></svg>
+        </button>
+        <label class="field">H <input type="text" inputmode="decimal" class="num" id="lh" title="Height"></label>
+        <span class="label readout" id="lscale"></span>
+      </div>
+      <div class="vsep"></div>
+      <div class="grp tight">
+        <button class="outline" data-cmd="originalSize" id="btnOrig" title="Original size">Original size</button>
+      </div>
+    </div>
+
+    <div class="opt" id="alignProps">
+      <div class="grp tight">
+        <button class="icon small" data-align="left" title="Align left (Alt+A)"><svg viewBox="0 0 16 16"><path d="M2.5 2v12"/><rect x="5" y="3.5" width="8" height="3" rx=".5"/><rect x="5" y="9.5" width="5" height="3" rx=".5"/></svg></button>
+        <button class="icon small" data-align="hcenter" title="Align horizontal centers (Alt+H)"><svg viewBox="0 0 16 16"><path d="M8 2v12"/><rect x="3" y="3.5" width="10" height="3" rx=".5"/><rect x="5" y="9.5" width="6" height="3" rx=".5"/></svg></button>
+        <button class="icon small" data-align="right" title="Align right (Alt+D)"><svg viewBox="0 0 16 16"><path d="M13.5 2v12"/><rect x="3" y="3.5" width="8" height="3" rx=".5"/><rect x="6" y="9.5" width="5" height="3" rx=".5"/></svg></button>
+        <button class="icon small" data-align="top" title="Align top (Alt+W)"><svg viewBox="0 0 16 16"><path d="M2 2.5h12"/><rect x="3.5" y="5" width="3" height="8" rx=".5"/><rect x="9.5" y="5" width="3" height="5" rx=".5"/></svg></button>
+        <button class="icon small" data-align="vcenter" title="Align vertical centers (Alt+V)"><svg viewBox="0 0 16 16"><path d="M2 8h12"/><rect x="3.5" y="3" width="3" height="10" rx=".5"/><rect x="9.5" y="5" width="3" height="6" rx=".5"/></svg></button>
+        <button class="icon small" data-align="bottom" title="Align bottom (Alt+S)"><svg viewBox="0 0 16 16"><path d="M2 13.5h12"/><rect x="3.5" y="3" width="3" height="8" rx=".5"/><rect x="9.5" y="6" width="3" height="5" rx=".5"/></svg></button>
+      </div>
+      <div class="vsep"></div>
+      <div class="grp tight">
+        <button class="icon small" data-distribute="h" title="Distribute horizontal spacing (Alt+Shift+H)"><svg viewBox="0 0 16 16"><path d="M2.5 3v10M13.5 3v10"/><rect x="6" y="4.5" width="4" height="7" rx=".5"/></svg></button>
+        <button class="icon small" data-distribute="v" title="Distribute vertical spacing (Alt+Shift+V)"><svg viewBox="0 0 16 16"><path d="M3 2.5h10M3 13.5h10"/><rect x="4.5" y="6" width="7" height="4" rx=".5"/></svg></button>
+      </div>
+      <div class="vsep"></div>
+      <label class="field" id="spacingField" title="Spacing between the selected layers">
+        <svg id="spacingIcon" viewBox="0 0 16 16"><path d="M2.5 3v10M13.5 3v10M5.5 8h5M7 6.5 5.5 8 7 9.5M9 6.5l1.5 1.5L9 9.5"/></svg>
+        <input type="text" inputmode="decimal" class="num narrow" id="gapNum" placeholder="Mixed" aria-label="Spacing">
+      </label>
+    </div>
+
+    <div class="opt" id="selActions">
+      <div class="grp tight">
+        <span class="label readout" id="selSize"></span>
+        <button data-cmd="selDelete" title="Delete selected pixels (Delete)" aria-label="Delete selected pixels">Delete</button>
+        <button data-cmd="copyToLayer" title="Copy to new layer (Ctrl+J)">Copy to layer</button>
+        <button data-cmd="cutToLayer" title="Cut to new layer (Ctrl+Shift+J)">Cut to layer</button>
+      </div>
+      <div class="vsep"></div>
+      <div class="grp fill-group">
+        <select id="selFill" title="Fill with"><option value="color">Color</option><option value="smart">Smart</option></select>
+        <label class="swatch small sel-swatch" title="Fill color (I)"><input type="color" class="fill-color" aria-label="Fill color"></label>
+        <button data-cmd="fillSel" id="btnFill" title="Fill (Alt+Backspace)">Fill</button>
+      </div>
+      <div class="vsep"></div>
+      <button class="more" id="selMore" title="More selection actions" aria-haspopup="menu" aria-expanded="false">More
+        <svg viewBox="0 0 16 16"><path d="m4.5 6.5 3.5 3.5 3.5-3.5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+    <nav class="toolbar" id="tools" aria-label="Tools">
+      <!-- Toolbar icons: 24-unit grid, 1.5 stroke (≈1.4px on screen at 22px). -->
+      <button data-tool="pointer" title="Pointer (V)"><svg viewBox="0 0 24 24"><path d="M7 3.5v15.5l4-3.7 2.6 5.8 2.7-1.2-2.6-5.7H19z" class="fill"/></svg></button>
+      <button data-tool="marquee" title="Marquee (M)"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1" stroke-dasharray="3 2" stroke-dashoffset="1.5"/></svg></button>
+      <button data-tool="wand" title="Magic wand (W)"><svg viewBox="0 0 24 24"><path d="M4 20l9.5-9.5M17 3.7v1.8M17 8.5v1.8M13.7 7h1.8M18.5 7h1.8M10 3.2v1.6M9.2 4h1.6M19.5 13.2v1.6M18.7 14h1.6"/></svg></button>
+      <button data-tool="bucket" title="Paint bucket (G)"><svg viewBox="0 0 24 24"><path d="M10 3.5 16.5 10 10 16.5 3.5 10zM3.5 10h13M19.5 14s-1.8 2.2-1.8 3.3a1.8 1.8 0 0 0 3.6 0c0-1.1-1.8-3.3-1.8-3.3z"/></svg></button>
+      <button data-tool="eraser" title="Eraser (E)"><svg viewBox="0 0 24 24"><path d="M8 19.5 4.3 15.8a1.5 1.5 0 0 1 0-2.1l9.4-9.4a1.5 1.5 0 0 1 2.1 0l4.4 4.4a1.5 1.5 0 0 1 0 2.1L12 19.5zM9.5 8.5l6 6M12 19.5h8"/></svg></button>
+    </nav>
+
+    <div class="stage" id="stage">
+      <!-- Focusable so the Menu key (or Shift+F10) opens the right-click menu from the keyboard -->
+      <canvas id="view" tabindex="0" aria-label="Canvas. Use the Menu key for commands."></canvas>
+    </div>
+
+    <aside class="panel" aria-label="Layers panel">
+      <div class="panel-head">
+        <span>Layers</span>
+        <button class="icon" data-cmd="deleteLayer" title="Delete selected layers"><svg viewBox="0 0 16 16"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 9h5.8l.6-9"/></svg></button>
+      </div>
+      <ul class="layers" id="layers"></ul>
+    </aside>
+  </div>
+
+  <footer class="statusbar">
+    <div class="zoom">
+      <button class="icon small" data-cmd="zoomOut" title="Zoom out (Ctrl+−)"><svg viewBox="0 0 16 16"><path d="M4 8h8"/></svg></button>
+      <button class="zoom-label" data-cmd="zoom100" id="zoomLabel" title="Click for 100% (Ctrl+1)">100%</button>
+      <button class="icon small" data-cmd="zoomIn" title="Zoom in (Ctrl+=)"><svg viewBox="0 0 16 16"><path d="M4 8h8M8 4v8"/></svg></button>
+      <button class="small" data-cmd="zoomFit" title="Fit artboard in window (Ctrl+0)" aria-label="Zoom to fit">Fit</button>
+    </div>
+    <div class="status-item" id="cursorPos"></div>
+    <div class="status-item"><span class="chip" id="cursorChip"></span><span id="cursorColor"></span></div>
+  </footer>
+</div>
+
+<dialog id="dlgCanvas">
+  <form method="dialog" class="dlg">
+    <h2>Canvas size</h2>
+    <p class="note">Changes the artboard only. The image keeps its size.</p>
+    <div class="row">
+      <label>Width <input type="number" id="cw" min="1" max="16000" required></label>
+      <label>Height <input type="number" id="ch" min="1" max="16000" required></label>
+      <span class="muted">px</span>
+    </div>
+    <div class="row">
+      <span class="label">Anchor</span>
+      <div class="anchor" id="anchor"></div>
+    </div>
+    <div class="row">
+      <label class="check"><input type="checkbox" id="cbgTransparent"> Transparent background</label>
+      <input type="color" id="cbg" value="#ffffff" title="Background color">
+    </div>
+    <div class="actions">
+      <button value="ok" class="primary">Apply</button>
+      <button value="cancel" formnovalidate>Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgImage">
+  <form method="dialog" class="dlg">
+    <h2>Image size</h2>
+    <p class="note">Scales the artboard and everything on it.</p>
+    <div class="row">
+      <label class="field">Width <input type="text" inputmode="decimal" class="num" id="iw" title="Accepts math like 60/2, *2, 50%"></label>
+      <label class="field">Height <input type="text" inputmode="decimal" class="num" id="ih" title="Accepts math like 60/2, *2, 50%"></label>
+      <span class="muted">px</span>
+      <span class="muted readout" id="iPct"></span>
+    </div>
+    <div class="row">
+      <label class="check"><input type="checkbox" id="iLock" checked>Keep proportions</label>
+    </div>
+    <div class="actions">
+      <button value="ok" class="primary">Apply</button>
+      <button value="cancel" formnovalidate>Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgExport">
+  <form method="dialog" class="dlg">
+    <h2>Save as</h2>
+    <div class="row seg">
+      <label><input type="radio" name="fmt" value="png" checked> PNG</label>
+      <label><input type="radio" name="fmt" value="jpeg"> JPEG</label>
+    </div>
+    <div class="row" id="qualityRow">
+      <label>Quality <input type="range" id="jq" min="10" max="100" value="90"> <span id="jqv">90</span></label>
+    </div>
+    <div class="row">
+      <label class="grow">File name <input type="text" id="fname" value="cutout"></label>
+    </div>
+    <p class="note" id="exportNote"></p>
+    <div class="actions">
+      <button value="ok" class="primary">Save</button>
+      <button value="cancel" formnovalidate>Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgAbout">
+  <form method="dialog" class="dlg about">
+    <img src="icons/icon-256.png" alt="" width="64" height="64">
+    <h2>Cutout</h2>
+    <p class="note" id="aboutVersion"></p>
+    <div class="actions"><button value="ok" class="primary">OK</button></div>
+  </form>
+</dialog>
+
+<div class="menu" id="menu" aria-label="Commands" hidden></div>
+<div class="toast" id="toast" aria-hidden="true"></div>
+<!-- Messages for screen readers (the toast above is the visual version) -->
+<div class="sr-only" id="announce" role="status" aria-live="polite"></div>
+<input type="file" id="fileInput" accept="image/*" multiple hidden>
+<script src="version.js"></script>
+<script src="fill.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

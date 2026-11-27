@@ -1,0 +1,21 @@
+# Keeps Cutout's dependencies current: Dependabot opens a pull request when a new version is out.
+# Each pull request gets a Windows + Mac test build (release.yml), so an update is only merged once it builds.
+version: 2
+updates:
+  - package-ecosystem: npm # electron, electron-builder
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: deps
+
+  - package-ecosystem: github-actions # actions used in .github/workflows
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci
