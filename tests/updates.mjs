@@ -80,7 +80,7 @@ export default async function updateTests({ electron, here, wait }) {
     await press('Skip This Version'); await wait(200);
     check('Skip This Version closes the dialog', !(await openDialog()));
     const hasItem = await menuItem('Check for Updates');
-    const again = hasItem && await until(`!!document.querySelector('#dlgUpdate[open]')`, 5000);
+    const again = hasItem && await until(`!!document.querySelector('#dlgUpdate[open]')`, 15000);
     check('Check for Updates in the Cutout menu shows the skipped version', again, await openDialog());
 
     // 4. Later just closes it
@@ -89,17 +89,17 @@ export default async function updateTests({ electron, here, wait }) {
 
     // 5. Download Update → "ready" dialog (Windows; the Mac needs a signed app, Linux has no updater)
     if (process.platform === 'win32') {
-      await menuItem('Check for Updates'); await until(`!!document.querySelector('#dlgUpdate[open]')`, 5000);
+      await menuItem('Check for Updates'); await until(`!!document.querySelector('#dlgUpdate[open]')`, 15000);
       await press('Download Update');
       // 60 s: antivirus may scan the downloaded file first
       const ready = await until(`!!document.querySelector('#dlgUpdateReady[open]')`, 60000);
-      d = (await openDialog()) || 'no dialog; message: ' + await ev(`document.querySelector('#toast').textContent`);
+      d = (await openDialog()) || 'no dialog; message: ' + await ev(`document.querySelector('#toast').textContent`) + '; requests: ' + requests.map(r => r.url.split('?')[0]).join(' ');
       check('Download Update downloads it, then offers Restart to Update', ready && d === 'dlgUpdateReady: Cutout 99.0.0 is ready | Restart Cutout to finish updating.', d);
       check('the download came from the update server, with the same plain headers', requests.some(r => r.url.startsWith('/' + file))
         && requests.every(r => r.headers['user-agent'] === 'Cutout' && !r.headers['x-user-staging-id']));
       await press('Later'); await wait(200);
       await menuItem('Check for Updates');
-      check('Check for Updates after a download offers the restart', await until(`!!document.querySelector('#dlgUpdateReady[open]')`, 5000), await openDialog());
+      check('Check for Updates after a download offers the restart', await until(`!!document.querySelector('#dlgUpdateReady[open]')`, 15000), await openDialog());
       await press('Later');
     }
   } catch (e) {

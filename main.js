@@ -279,7 +279,8 @@ async function checkForUpdate(manual) {
   if (!u) return manual ? { status: 'error' } : null;
   if (update.ready) return { status: 'ready', version: update.ready };
   try {
-    const r = await u.checkForUpdates();
+    // A server that never answers would leave Check for Updates waiting forever: give up after 30 s
+    const r = await Promise.race([u.checkForUpdates(), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), 30000))]);
     settings.lastUpdateCheck = Date.now();
     saveSettings();
     const version = r && r.isUpdateAvailable ? String(r.updateInfo.version) : null;
