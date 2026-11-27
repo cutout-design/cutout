@@ -5,6 +5,7 @@ What's new in each version of Cutout. The section for a version becomes its rele
 ## Unreleased
 
 - Dragging a marquee, moving layers or dragging a selection box to the edge of the canvas scrolls the view, as in Fireworks and Figma. It speeds up as you go past the edge (full speed 40 px past it, on every side), and the selection keeps growing while you hold the pointer still.
+- Windows: the installers and the app are code-signed, so Windows shows who published them.
 - Mac: the app is signed and notarized by Apple, so it opens after the usual "downloaded from the Internet" question, without a trip to Privacy & Security.
 - Pasting SVG markup (Figma's Copy as SVG) is safer: Cutout reads the size straight from the SVG and lets the browser draw it as an image, without loading the markup as a document. SVG that declares entities is refused, and text made to look like many comments before an SVG can no longer freeze the window.
 - Each release now lists SHA-256 checksums of its files, and each file comes with build provenance, a signed record that it was built from this repository. SECURITY.md explains how to check a download.

@@ -20,7 +20,10 @@ Only the latest release gets fixes. Updating to it is the way to get them.
 
 ## Checking a download
 
-Starting with the next release after 1.3.5, the Mac app is signed with an Apple Developer ID and notarized by Apple, so macOS checks it when it opens. In Terminal, `spctl -a -vv /Applications/Cutout.app` should say `accepted` and `source=Notarized Developer ID`.
+Starting with the next release after 1.3.5, the Windows installers and the app inside them are code-signed (Azure Artifact Signing), and the Mac app is signed with an Apple Developer ID and notarized by Apple, so macOS checks it when it opens.
+
+- Windows (PowerShell): `(Get-AuthenticodeSignature Cutout-1.3.6.exe).Status` should say `Valid`. Or right-click the file, then Properties → Digital Signatures.
+- Mac (Terminal): `spctl -a -vv /Applications/Cutout.app` should say `accepted` and `source=Notarized Developer ID`.
 
 From that release on, there are also two ways to check that any download is the file the release workflow built.
 
