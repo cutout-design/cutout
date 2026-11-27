@@ -4,6 +4,7 @@ What's new in each version of Cutout. The section for a version becomes its rele
 
 ## Unreleased
 
+- Automatic updates in the desktop app: once a day Cutout checks GitHub for a new version and offers Download Update, Later or Skip This Version; the update downloads in the background and installs with Restart to Update, or when you quit. Check for Updates is in the Cutout menu (on a Mac, the Cutout menu in the menu bar). The check sends nothing about you: no version, no ID, no language, no cookies. Updating from this version on is automatic; to get here, install it once by hand.
 - Pasting SVG markup (Figma's Copy as SVG) is safer: Cutout reads the size straight from the SVG and lets the browser draw it as an image, without loading the markup as a document. SVG that declares entities is refused, and text made to look like many comments before an SVG can no longer freeze the window.
 - Each release now lists SHA-256 checksums of its files, and each file comes with build provenance, a signed record that it was built from this repository. SECURITY.md explains how to check a download.
 

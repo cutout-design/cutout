@@ -2,9 +2,10 @@
 /*
  * Cutout desktop app (Electron). Loads the same cutout/ web app and adds native behavior
  * through preload.js → window.cutoutNative, which cutout/app.js uses via its Platform object:
- * clipboard reads, native Save dialog, themed title bar, Open with, drag a layer out as a file.
+ * clipboard reads, native Save dialog, themed title bar, Open with, drag a layer out as a file,
+ * and updates from GitHub Releases.
  */
-const { app, BrowserWindow, ipcMain, clipboard, dialog, nativeTheme, nativeImage, Menu, shell, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, dialog, nativeTheme, nativeImage, Menu, shell, screen, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -116,6 +117,7 @@ function createWindow() {
       noLink: true,
     });
     if (choice === 0) e.preventDefault(); // close anyway
+    else installOnClose = false; // Restart to Update waits for the next quit
   });
 
   win.on('close', () => {
@@ -123,7 +125,10 @@ function createWindow() {
     settings.bounds = win.getNormalBounds();
     saveSettings();
   });
-  win.on('closed', () => { win = null; rendererReady = false; });
+  win.on('closed', () => {
+    win = null; rendererReady = false;
+    if (installOnClose) installUpdate();
+  });
 }
 
 /* ---------- IPC (see preload.js) */
@@ -189,6 +194,7 @@ ipcMain.on('theme:set', (_e, pref) => {
 
 ipcMain.handle('files:startup', () => {
   rendererReady = true;
+  scheduleUpdateChecks();
   const list = pendingFiles.map(readEntry).filter(Boolean);
   pendingFiles = [];
   return list;
@@ -219,6 +225,109 @@ app.on('will-quit', () => {
   for (const d of dragDirs) { try { fs.rmSync(d, { recursive: true, force: true }); } catch (_) { /* in use */ } }
 });
 
+/* ---------- updates (electron-updater, from this repository's GitHub Releases) */
+// Once a day (at launch, and every 24 hours while Cutout stays open) Cutout asks GitHub whether a newer
+// release is out. The requests carry nothing about the user or the computer: user agent "Cutout", no
+// version, no ID, no language, no cookies (electron-updater has a session of its own). The page shows the dialogs:
+// "available" (Download Update / Later / Skip This Version), then "ready" (Restart to Update / Later;
+// otherwise the update installs when Cutout quits). Off when running from source, except in tests.
+const DAY = 24 * 60 * 60 * 1000;
+const testFeed = !app.isPackaged && process.env.CUTOUT_UPDATE_CONFIG; // tests: an app-update.yml for a local server
+const updatesOn = (app.isPackaged && process.platform !== 'linux') || !!testFeed;
+let updater = null;
+let installOnClose = false;
+const update = { version: null, ready: null, downloading: null, timer: null };
+function getUpdater() {
+  if (updater || !updatesOn) return updater;
+  updater = require('electron-updater').autoUpdater;
+  updater.logger = null;
+  updater.autoDownload = false; // only after Download Update
+  updater.autoInstallOnAppQuit = true; // Later on "ready": it installs when Cutout quits
+  updater.allowPrerelease = false;
+  updater.allowDowngrade = false;
+  if (testFeed) {
+    updater.forceDevUpdateConfig = true;
+    updater.updateConfigPath = testFeed;
+  }
+  // electron-updater keeps a random ID per install (.updaterId, for staged rollouts) and sends it as
+  // x-user-staging-id. Cutout has no staged rollouts: no ID file, and the header is removed below.
+  updater.getOrCreateStagingUserId = async () => '00000000-0000-4000-8000-000000000000';
+  session.fromPartition('electron-updater', { cache: false }).webRequest.onBeforeSendHeaders((d, done) => {
+    const headers = {};
+    for (const [k, v] of Object.entries(d.requestHeaders)) if (!/^(x-user-staging-id|user-agent|accept-language)$/i.test(k)) headers[k] = v;
+    headers['User-Agent'] = 'Cutout';
+    done({ requestHeaders: headers });
+  });
+  updater.requestHeaders = { 'User-Agent': 'Cutout' };
+  updater.on('download-progress', p => { if (win) win.webContents.send('update:progress', Math.floor(p.percent || 0)); });
+  return updater;
+}
+function scheduleUpdateChecks() {
+  if (!updatesOn || update.timer) return;
+  const auto = async () => {
+    if (update.ready || update.downloading || Date.now() - (settings.lastUpdateCheck || 0) < DAY) return;
+    const r = await checkForUpdate(false);
+    if (r && win && rendererReady) win.webContents.send('update:available', r);
+  };
+  setTimeout(auto, testFeed ? 1000 : 5000); // once launch has settled
+  update.timer = setInterval(auto, 60 * 60 * 1000); // hourly: has a day passed?
+}
+/** → { status: 'available', version, current } | { status: 'ready', version } | { status: 'current' }
+ *  | { status: 'error' }. Automatic checks return null unless there is something to show. */
+async function checkForUpdate(manual) {
+  const u = getUpdater();
+  if (!u) return manual ? { status: 'error' } : null;
+  if (update.ready) return { status: 'ready', version: update.ready };
+  try {
+    const r = await u.checkForUpdates();
+    settings.lastUpdateCheck = Date.now();
+    saveSettings();
+    const version = r && r.isUpdateAvailable ? String(r.updateInfo.version) : null;
+    if (!version) return manual ? { status: 'current' } : null;
+    if (!manual && settings.skipVersion === version) return null; // Skip This Version: only a manual check shows it
+    update.version = version;
+    return { status: 'available', version, current: app.getVersion() };
+  } catch (_) {
+    return manual ? { status: 'error' } : null; // offline is normal: automatic checks stay quiet
+  }
+}
+function installUpdate() {
+  installOnClose = false;
+  // Not silent: the installer's progress window shows while it installs (silent, nothing showed for
+  // 10 to 20 seconds, which looked like Cutout had quit). It starts the new version when done.
+  if (update.ready && updater) updater.quitAndInstall(false, true);
+}
+ipcMain.handle('update:supported', () => updatesOn);
+ipcMain.handle('update:check', () => checkForUpdate(true));
+ipcMain.handle('update:download', async () => {
+  const u = getUpdater();
+  if (!u || !update.version) return { status: 'error' };
+  if (update.ready) return { status: 'ready', version: update.ready };
+  try {
+    update.downloading = update.downloading || u.downloadUpdate();
+    await update.downloading;
+    update.ready = update.version;
+    return { status: 'ready', version: update.ready };
+  } catch (_) {
+    return { status: 'error' };
+  } finally {
+    update.downloading = null;
+  }
+});
+ipcMain.on('update:skip', () => {
+  if (!update.version) return;
+  settings.skipVersion = update.version;
+  saveSettings();
+});
+// Restart to Update: close the window first, so unsaved changes still get their question. If the
+// user keeps the window open, nothing happens now (the update still installs on quit).
+ipcMain.on('update:restart', () => {
+  if (!update.ready) return;
+  if (!win) { installUpdate(); return; }
+  installOnClose = true;
+  win.close();
+});
+
 /* ---------- app */
 // Windows/Linux: no menu bar (Cutout has its own menus; also drops Electron's default Reload/DevTools keys).
 // Mac: a menu bar is expected, and without an Edit menu ⌘C / ⌘V don't even work in text fields.
@@ -227,7 +336,21 @@ app.on('will-quit', () => {
 function buildMacMenu() {
   const toPage = cmd => () => { if (win) win.webContents.send('menu:command', cmd); };
   return Menu.buildFromTemplate([
-    { role: 'appMenu' }, // Cutout: About, Hide, Hide others, Quit…
+    {
+      label: 'Cutout',
+      submenu: [
+        { role: 'about' },
+        ...(updatesOn ? [{ label: 'Check for Updates', click: toPage('checkUpdates') }] : []),
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    },
     {
       label: 'Edit',
       submenu: [

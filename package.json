@@ -12,13 +12,18 @@
     "test": "node tests/run.mjs",
     "version": "node scripts/sync-version.js && git add cutout/version.js",
     "dist": "electron-builder --win --x64",
-    "dist:arm64": "electron-builder --win --arm64 -c.nsis.artifactName=Cutout-${version}-arm64.${ext}",
+    "dist:arm64": "electron-builder --win --arm64 -c.nsis.artifactName=Cutout-${version}-arm64.${ext} -c.publish.channel=latest-arm64",
     "dist:mac": "electron-builder --mac --arm64"
   },
   "build": {
     "appId": "app.cutout",
     "productName": "Cutout",
     "copyright": "",
+    "publish": {
+      "provider": "github",
+      "owner": "cutout-design",
+      "repo": "cutout"
+    },
     "files": [
       "main.js",
       "preload.js",
@@ -100,5 +105,8 @@
   },
   "allowScripts": {
     "electron-winstaller@5.4.0": true
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
   }
 }

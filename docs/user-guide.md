@@ -301,7 +301,10 @@ Every number field (sizes, positions, tolerance, spacing, dialogs) accepts math,
 Open the **Cutout** menu (top-left):
 
 - **Theme**: System (follows your computer), Light or Dark. In the desktop app, the window's title bar follows it too.
+- **Check for Updates** (desktop app): asks GitHub right away whether a new version is out. On the Mac app it's in the menu bar instead (Cutout → Check for Updates).
 - **About Cutout**: the version you're running. On the Mac app it's in the menu bar instead (Cutout → About Cutout).
+
+**Updates.** Once a day the desktop app checks GitHub for a new version. When there is one, it asks: **Download Update** downloads it in the background, **Later** asks again the next day, and **Skip This Version** stops asking about that version (Check for Updates still shows it). A message shows the download progress. Once downloaded, **Restart to Update** restarts Cutout with the new version (asking first if you have unsaved changes), or it installs the next time you quit. The check sends nothing about you or your images. The browser version is always the latest and never checks.
 
 Cutout remembers its settings (theme, tolerances, eraser size, marquee shape, proportion locks and so on) between sessions.
 

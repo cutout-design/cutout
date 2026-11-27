@@ -78,6 +78,12 @@ try {
       report('a11y (real key and mouse input)', await a11y({ send, ev, wait }));
     } catch (e) { report('a11y', [`FAIL  the suite stopped: ${e.message}`]); }
   }
+  if (wanted('updates')) { // starts a Cutout of its own, with a local update server
+    try {
+      const updates = (await import('./updates.mjs')).default;
+      report('updates (local update server)', await updates({ electron, here, wait }));
+    } catch (e) { report('updates', [`FAIL  the suite stopped: ${e.message}`]); }
+  }
 } catch (e) {
   failed++; console.error(e.message);
 } finally {

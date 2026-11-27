@@ -15,6 +15,7 @@
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const IS_MAC = /mac/i.test((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '');
+  document.documentElement.classList.toggle('mac', IS_MAC); // dialog button order (styles.css .actions)
   /** Shortcut labels are written Windows-style ("Ctrl+Shift+S"); on a Mac show them the Mac way ("⇧⌘S"). */
   const MAC_KEYS = { Backspace: '⌫', Delete: '⌦', Enter: '↩', Escape: '⎋' };
   function fmtKeys(text) {
@@ -225,6 +226,15 @@
     onMenuCommand(cb) { if (Native && Native.onMenuCommand) Native.onMenuCommand(cb); },
     /** Desktop app: drag a PNG out as a real file. Call from dragstart with bytes prepared earlier. */
     startDragOut(name, pngBytes) { if (Native) Native.startDrag(name, pngBytes); },
+    /** Installed desktop app: updates from GitHub Releases (see main.js). The browser version is
+     *  always the latest, so it has none. → Promise<boolean> */
+    updateSupported: Native && Native.updateSupported ? Native.updateSupported().catch(() => false) : Promise.resolve(false),
+    checkForUpdates() { return Native.checkForUpdates(); },
+    onUpdate(cb) { if (Native && Native.onUpdate) Native.onUpdate(cb); },
+    downloadUpdate() { return Native.downloadUpdate(); },
+    skipUpdate() { Native.skipUpdate(); },
+    restartToUpdate() { Native.restartToUpdate(); },
+    onUpdateProgress(cb) { if (Native && Native.onUpdateProgress) Native.onUpdateProgress(cb); },
   };
   const mimeFor = name => (/\.jpe?g$/i.test(name) ? 'image/jpeg' : 'image/png');
 
@@ -2837,9 +2847,68 @@
       { label: 'System', checked: t === 'system', run: () => setTheme('system') },
       { label: 'Light', checked: t === 'light', run: () => setTheme('light') },
       { label: 'Dark', checked: t === 'dark', run: () => setTheme('dark') },
-      // On the Mac app, About is in the menu bar (Cutout → About Cutout)
-      ...(IS_MAC && Platform.isNative ? [] : ['-', { label: 'About Cutout', run: openAbout }]),
+      // On the Mac app, About and Check for Updates are in the menu bar (Cutout → About Cutout)
+      ...(IS_MAC && Platform.isNative ? [] : ['-',
+        ...(updatesOn ? [{ label: 'Check for Updates', run: checkUpdates }] : []),
+        { label: 'About Cutout', run: openAbout }]),
     ], r.left, r.bottom + 4, kb);
+  });
+
+  /* Updates (installed desktop app). main.js checks GitHub once a day and sends what it finds here;
+   * Check for Updates asks right away. Dialogs wait while another dialog is open or a drag runs. */
+  let updatesOn = false, offered = null; // offered: the version in the open Update dialog
+  Platform.updateSupported.then(on => { updatesOn = !!on; });
+  function whenFree(fn) {
+    if (!document.querySelector('dialog[open]') && !drag) { fn(); return; }
+    setTimeout(() => whenFree(fn), 1000);
+  }
+  function showUpdate(r) {
+    $('#toast').classList.remove('show');
+    if (r.status === 'ready') {
+      $('#updReadyTitle').textContent = `Cutout ${r.version} is ready`;
+      $('#dlgUpdateReady').returnValue = '';
+      $('#dlgUpdateReady').showModal();
+    } else {
+      $('#updTitle').textContent = `Cutout ${r.version} is available`;
+      $('#updNote').textContent = `You have ${r.current}`;
+      offered = r.version;
+      $('#dlgUpdate').returnValue = '';
+      $('#dlgUpdate').showModal();
+    }
+  }
+  async function checkUpdates() {
+    if (checkUpdates.busy) return;
+    checkUpdates.busy = true;
+    toast('Checking for updates…');
+    try {
+      const r = await Platform.checkForUpdates();
+      if (r.status === 'current') toast('Cutout is up to date');
+      else if (r.status === 'available' || r.status === 'ready') whenFree(() => showUpdate(r));
+      else toast('Couldn’t check for updates');
+    } catch (_) { toast('Couldn’t check for updates'); }
+    finally { checkUpdates.busy = false; }
+  }
+  Platform.onUpdate(r => whenFree(() => showUpdate(r)));
+  // Download progress: the toast stays up while the download runs (read out once, at the start)
+  Platform.onUpdateProgress(pct => {
+    if (!offered) return;
+    const t = $('#toast');
+    t.textContent = `Downloading Cutout ${offered} (${pct}%)`;
+    t.classList.add('show');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => t.classList.remove('show'), 4000);
+  });
+  $('#dlgUpdate').addEventListener('close', async e => {
+    const choice = e.currentTarget.returnValue;
+    if (choice === 'skip') { Platform.skipUpdate(); return; }
+    if (choice !== 'download') return; // Later
+    toast(`Downloading Cutout ${offered}`);
+    const r = await Platform.downloadUpdate().catch(() => ({ status: 'error' }));
+    if (r.status === 'ready') whenFree(() => showUpdate(r));
+    else toast('Couldn’t download the update');
+  });
+  $('#dlgUpdateReady').addEventListener('close', e => {
+    if (e.currentTarget.returnValue === 'restart') Platform.restartToUpdate();
   });
 
   /** About: the icon, the name and the version (as on the Mac's About window). */
@@ -4239,6 +4308,7 @@
   // the same shortcut as the keyboard. Cut / Copy / Paste use the system's own commands, which
   // fire the cut / copy / paste events below.
   Platform.onMenuCommand(cmd => {
+    if (cmd === 'checkUpdates') { checkUpdates(); return; } // Cutout → Check for Updates
     if (isTyping(document.activeElement)) { document.execCommand(cmd); return; }
     const keys = { undo: ['z', false], redo: ['z', true], selectAll: ['a', false] }[cmd];
     if (keys) document.body.dispatchEvent(new KeyboardEvent('keydown', { key: keys[0], code: 'Key' + keys[0].toUpperCase(), metaKey: true, shiftKey: keys[1], bubbles: true, cancelable: true }));

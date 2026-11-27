@@ -345,7 +345,10 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.25); }
 .dlg.about { justify-items: center; text-align: center; gap: 6px; min-width: 240px; padding: 24px 24px 18px; }
 .dlg.about h2 { font-size: 16px; margin-top: 6px; }
 .dlg.about .actions { margin-top: 12px; }
-.actions { display: flex; flex-direction: row-reverse; gap: 8px; }
+/* Dialog buttons, main button first in the markup: on the left on Windows (its convention), on the
+ * right on a Mac (html.mac, set by app.js). Both right-aligned. */
+.actions { display: flex; justify-content: flex-end; gap: 8px; }
+.mac .actions { flex-direction: row-reverse; justify-content: flex-start; }
 .actions button { border-color: var(--border); min-width: 76px; }
 .actions button.primary { border-color: transparent; }
 .anchor { display: grid; grid-template-columns: repeat(3, 20px); gap: 3px; }

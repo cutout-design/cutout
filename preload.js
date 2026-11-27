@@ -19,6 +19,21 @@ contextBridge.exposeInMainWorld('cutoutNative', {
   onMenuCommand: cb => { ipcRenderer.on('menu:command', (_e, cmd) => cb(cmd)); },
   /** The app's version (About dialog). → '1.1.0' */
   getVersion: () => ipcRenderer.invoke('app:version'),
+  /** Updates from GitHub Releases. → true in the installed app */
+  updateSupported: () => ipcRenderer.invoke('update:supported'),
+  /** Check for Updates  → { status: 'available', version, current } | { status: 'ready', version }
+   *  | { status: 'current' } | { status: 'error' } */
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  /** The daily check found a version to offer: cb({ status: 'available', version, current }). */
+  onUpdate: cb => { ipcRenderer.on('update:available', (_e, info) => cb(info)); },
+  /** Download Update. → { status: 'ready', version } | { status: 'error' } */
+  downloadUpdate: () => ipcRenderer.invoke('update:download'),
+  /** While downloading: cb(percent). */
+  onUpdateProgress: cb => { ipcRenderer.on('update:progress', (_e, pct) => cb(pct)); },
+  /** Skip This Version (the one last offered). */
+  skipUpdate: () => ipcRenderer.send('update:skip'),
+  /** Restart to Update: closes the window (asking about unsaved changes), installs, starts again. */
+  restartToUpdate: () => ipcRenderer.send('update:restart'),
   /** Starts an OS drag of a PNG file. Call from dragstart (after preventDefault). */
   startDrag: (name, bytes) => ipcRenderer.send('drag:start', name, bytes),
 });

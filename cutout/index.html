@@ -314,6 +314,29 @@
   </form>
 </dialog>
 
+<dialog id="dlgUpdate" aria-labelledby="updTitle">
+  <form method="dialog" class="dlg">
+    <h2 id="updTitle">Cutout is available</h2>
+    <p class="note" id="updNote"></p>
+    <div class="actions">
+      <button value="download" class="primary">Download Update</button>
+      <button value="later" formnovalidate>Later</button>
+      <button value="skip" formnovalidate>Skip This Version</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgUpdateReady" aria-labelledby="updReadyTitle">
+  <form method="dialog" class="dlg">
+    <h2 id="updReadyTitle">Cutout is ready</h2>
+    <p class="note">Restart Cutout to finish updating.</p>
+    <div class="actions">
+      <button value="restart" class="primary">Restart to Update</button>
+      <button value="later" formnovalidate>Later</button>
+    </div>
+  </form>
+</dialog>
+
 <div class="menu" id="menu" aria-label="Commands" hidden></div>
 <div class="toast" id="toast" aria-hidden="true"></div>
 <!-- Messages for screen readers (the toast above is the visual version) -->

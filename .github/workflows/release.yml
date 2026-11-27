@@ -1,6 +1,7 @@
 # Builds Cutout for Windows and Mac when a version tag (v1.2.3) is pushed, and publishes a GitHub Release
-# with the Windows installer and the Mac app attached. Pull requests (e.g. Dependabot updates) and runs
-# by hand (Actions tab) only build, to check that everything still builds; they don't release.
+# with the Windows installers and the Mac app attached, plus the files the app's updater reads
+# (latest.yml, latest-arm64.yml, latest-mac.yml and .blockmap files). Pull requests (e.g. Dependabot
+# updates) and runs by hand (Actions tab) only build, to check that everything still builds; they don't release.
 name: Release
 
 on:
@@ -22,16 +23,23 @@ jobs:
             script: dist
             files: |
               dist/Cutout-*.exe
+              dist/Cutout-*.exe.blockmap
+              dist/latest.yml
           - name: windows-arm64 # built on an x64 runner; no native modules, so cross-building works
             os: windows-latest
             script: dist:arm64
+            # latest-arm64.yml: ARM64 has its own update channel (package.json dist:arm64), so x64 never gets it
             files: |
               dist/Cutout-*-arm64.exe
+              dist/Cutout-*-arm64.exe.blockmap
+              dist/latest-arm64.yml
           - name: mac-arm64 # Apple Silicon
             os: macos-latest
             script: dist:mac
             files: |
               dist/*.zip
+              dist/*.zip.blockmap
+              dist/latest-mac.yml
     name: build (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     steps:
@@ -95,6 +103,9 @@ jobs:
           pkg=$(node -p "require('./package.json').version")
           web=$(sed -n "s/.*CUTOUT_VERSION = '\([^']*\)'.*/\1/p" cutout/version.js)
           if [ "$pkg" != "$version" ] || [ "$web" != "$version" ]; then echo "Version mismatch: tag $version, package.json $pkg, cutout/version.js $web" >&2; exit 1; fi
+          # Each updater file must point at its own platform's file (an x64 install must never get the ARM64 one).
+          grep -q "path: Cutout-$version.exe$" out/latest.yml && grep -q "path: Cutout-$version-arm64.exe$" out/latest-arm64.yml \
+            && grep -q "path: Cutout-$version.zip$" out/latest-mac.yml || { echo "Updater files don't match the builds" >&2; exit 1; }
           # SHA-256 checksums of the three files, so a download can be checked (see SECURITY.md).
           (cd out && sha256sum "Cutout-$version.exe" "Cutout-$version-arm64.exe" "Cutout-$version.zip" > SHA256SUMS.txt)
           cat out/SHA256SUMS.txt
@@ -104,6 +115,7 @@ jobs:
             "out/Cutout-$version-arm64.exe#Cutout $version for Windows (ARM64)" \
             "out/Cutout-$version.zip#Cutout $version for Mac" \
             "out/SHA256SUMS.txt#Checksums (SHA-256)" \
+            out/latest.yml out/latest-arm64.yml out/latest-mac.yml out/*.blockmap \
             --repo "$GITHUB_REPOSITORY" \
             --title "Cutout $version" \
             --notes-file notes.md
