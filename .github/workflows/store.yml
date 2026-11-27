@@ -1,0 +1,59 @@
+# Builds the Microsoft Store packages (x64 and ARM64 .appx) for an existing release tag, by hand
+# (Actions tab → Store packages → Run workflow → tag, e.g. v1.3.6). Kept apart from release.yml so
+# the GitHub Release keeps exactly its files: an unsigned .appx can't be installed by users anyway,
+# and it only makes sense uploaded to Partner Center.
+#
+# Download the "cutout-store-<tag>" artifact from the run page and upload both .appx files to the
+# Store submission's Packages page (one submission takes both architectures). Microsoft signs them
+# after certification. Works for tags whose package.json has the "appx" section (1.3.6 and later).
+name: Store packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build (for example v1.3.6)
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  appx:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - name: Check the tag matches package.json
+        shell: bash
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          pkg=$(node -p "require('./package.json').version")
+          if [ "v$pkg" != "$TAG" ]; then echo "Tag $TAG but package.json $pkg" >&2; exit 1; fi
+      - name: Build .appx (x64 and ARM64)
+        run: npm run dist:store -- --publish never
+        env:
+          # The Store signs the packages; never sign them here. Don't pass release.yml's
+          # -c.win.azureSignOptions flags: an .appx signature must match the manifest's Publisher
+          # (the Partner Center ID in package.json), not the certificate's name.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Show the package manifest
+        shell: bash
+        run: unzip -p dist/Cutout-*-x64.appx AppxManifest.xml | head -60
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cutout-store-${{ inputs.tag }}
+          path: dist/*.appx
+          if-no-files-found: error
+          retention-days: 3 # long enough to download them and upload to Partner Center
+
+# Later, optional: submit automatically with the Microsoft Store Developer CLI (msstore). It needs a
+# Microsoft Entra ID tenant linked to the Partner Center account and an app registration whose ID and
+# secret go in repository secrets. Not set up.
