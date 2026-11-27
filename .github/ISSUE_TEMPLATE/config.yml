@@ -1,7 +1,4 @@
-# The choice screen shown when someone opens a new issue (the forms in this folder come first).
+# The choice screen shown when someone opens a new issue: the forms in this folder, with blank issues off.
+# The user guide is linked from the Question form, and GitHub adds "Report a security vulnerability"
+# by itself (private reporting is on), so there are no extra links here.
 blank_issues_enabled: false
-contact_links:
-  - name: Read the user guide
-    url: https://github.com/cutout-design/cutout/blob/main/docs/user-guide.md
-    about: Every tool, command and shortcut. Many questions are answered here.
-# GitHub adds "Report a security vulnerability" here by itself (private reporting is on).
