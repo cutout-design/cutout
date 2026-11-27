@@ -367,13 +367,43 @@ function buildMacMenu() {
   ]);
 }
 Menu.setApplicationMenu(process.platform === 'darwin' ? buildMacMenu() : null);
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   if (THEMES.includes(settings.theme)) nativeTheme.themeSource = settings.theme; // title bar right from the start
   // Mac About window: just "Cutout" and "Version x.y.z" (no build number in parentheses, no copyright).
   if (process.platform === 'darwin') {
     app.setAboutPanelOptions({ applicationName: 'Cutout', applicationVersion: app.getVersion(), version: '', copyright: '' });
+    if (await offerMoveToApplications()) return; // moved: the copy in Applications starts instead
   }
-  createWindow();
+  if (!win) createWindow(); // a file opened while the Move question showed may have opened it already
 });
+// Mac: updates can only replace Cutout when it runs from the Applications folder. Opened straight
+// from Downloads, macOS runs a hidden read-only copy and the update fails. So offer to move it there
+// (as many Mac apps do), until the user says not to ask again. Not when opened with files: moving
+// restarts Cutout, and the files would be lost.
+async function offerMoveToApplications() {
+  if (!updatesOn || !app.isPackaged || settings.noMoveOffer || pendingFiles.length) return false;
+  try { if (app.isInApplicationsFolder()) return false; } catch (_) { return false; }
+  const r = await dialog.showMessageBox({
+    type: 'question',
+    message: 'Move Cutout to the Applications folder?',
+    detail: 'Cutout can update itself only from the Applications folder.',
+    buttons: ['Move to Applications', 'Do Not Move'],
+    defaultId: 0,
+    cancelId: 1,
+    checkboxLabel: 'Don’t ask again',
+  });
+  if (r.response === 0) return moveToApplications();
+  if (r.checkboxChecked) { settings.noMoveOffer = true; saveSettings(); }
+  return false;
+}
+function moveToApplications() {
+  try {
+    // An older Cutout already there is replaced; one that is running is left alone.
+    return app.moveToApplicationsFolder({ conflictHandler: type => type === 'exists' });
+  } catch (_) {
+    dialog.showMessageBoxSync({ type: 'warning', message: 'Couldn’t move Cutout', detail: 'Drag Cutout to the Applications folder in Finder.' });
+    return false;
+  }
+}
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (!win) createWindow(); });
