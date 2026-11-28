@@ -122,7 +122,26 @@
     },
     "dmg": {
       "title": "Cutout",
-      "writeUpdateInfo": false
+      "writeUpdateInfo": false,
+      "background": "installer/dmg-background.png",
+      "window": {
+        "width": 540,
+        "height": 300
+      },
+      "iconSize": 100,
+      "contents": [
+        {
+          "x": 150,
+          "y": 130,
+          "type": "file"
+        },
+        {
+          "x": 390,
+          "y": 130,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     }
   },
   "devDependencies": {
