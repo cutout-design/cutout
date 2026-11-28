@@ -4,7 +4,7 @@ What's new in each version of Cutout. The section for a version becomes its rele
 
 ## 2.0.2 (2026-11-28)
 
-- Mac: Cutout now downloads as a disk image (.dmg): open it and drag Cutout to Applications. Unzipping the old .zip into a folder synced by OneDrive could break the app ("Library missing").
+- Mac: Cutout now downloads as a disk image (.dmg): open it and drag Cutout to Applications. Unzipping the old .zip into a synced folder (such as OneDrive) could break the app ("Library missing").
 - Mac: Move to Applications now works with updates. Before, the moved copy kept the "downloaded from the Internet" flag, so macOS ran it from a hidden copy and Download Update asked to move Cutout to the Applications folder although it was there. If you moved Cutout with 2.0.0 or 2.0.1, update by downloading this version once and dragging it to Applications in Finder.
 - Mac: Download Update outside the Applications folder offers to move Cutout there, instead of only saying so.
 - Mac: Do Not Move is remembered only for that copy of Cutout. Before, the answer stayed even after deleting Cutout and downloading it again.

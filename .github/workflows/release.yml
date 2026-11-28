@@ -38,7 +38,7 @@ jobs:
           - name: mac-arm64 # Apple Silicon
             os: macos-latest
             script: dist:mac
-            # .dmg: the download (drag to Applications; unzipping into a OneDrive-synced folder broke the
+            # .dmg: the download (drag to Applications; unzipping into a synced folder, such as OneDrive, broke the
             # app's symlinks). .zip: what installed copies update from (Squirrel.Mac needs a zip).
             files: |
               dist/*.dmg

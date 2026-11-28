@@ -116,6 +116,18 @@ window.shrinkTests = async () => {
     C.setTool('marquee'); await drag(150, 120, 460, 260); await shrink();
     check('screenshot: snaps to the button', near([220, 170, 160, 44], 1), sel());
 
+    // Scan with lint out on the paper: specks close together and a hair in short bits must stay dust
+    // (the UI-text grouping below once took them for content and stretched the box)
+    for (const [name, paint] of [
+      ['three 4 px specks close together', g => { g.fillStyle = '#8a8a8a'; for (const [x, y] of [[700, 600], [709, 604], [716, 597]]) g.fillRect(x, y, 4, 4); }],
+      ['three 6 px specks close together', g => { g.fillStyle = '#7a7a7a'; for (const [x, y] of [[640, 760], [650, 766], [661, 758]]) g.fillRect(x, y, 6, 6); }],
+      ['a hair in four short bits', g => { g.strokeStyle = '#555'; g.lineWidth = 2; for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(600 + k * 14, 860 + k * 9); g.lineTo(610 + k * 14, 866 + k * 9); g.stroke(); } }],
+    ]) {
+      reset(); const c = scan(); paint(C.ctx2d(c)); C.addImageLayer(c, 'Scan'); await wait(30);
+      C.setTool('marquee'); await drag(-40, -40, 1000, 1000); await shrink();
+      check(`scan with ${name} on the paper: still snaps to the card`, near([9, 4, 563, 358]), sel());
+    }
+
     // UI screenshot: a title, a big gradient banner and a row of white cards with small text, on a flat
     // light background. Small text (each letter its own speck next to the big banner) must count.
     const ui = (avatars) => image(960, 552, (g, w, h) => {

@@ -1603,8 +1603,10 @@
     // ...but small pieces close together are content, not dust: the letters of a word and lines of
     // text (each letter is its own small piece, tiny next to a banner in a UI screenshot), and a faint
     // card border, which breaks into thin straight pieces at its rounded corners. Dropped pieces within
-    // 14 px of each other form groups; a group of 3 or more counts. Scattered specks stay dust, and
-    // leftovers of an edge line are never brought back.
+    // 14 px of each other form groups; a group of 3 or more counts when it sits next to what is already
+    // kept (within 24 px, growing as groups join): text and borders belong to the content around them,
+    // while lint or a broken hair out on a scan's paper doesn't (it stretched the box in a first try).
+    // Scattered specks stay dust, and leftovers of an edge line are never brought back.
     const cand = pieces.filter(p => !p.keep && !p.line && p.area >= 3), G = 14;
     if (cand.length > 1 && cand.length <= 20000) {
       const up = cand.map((_, k) => k), find = k => { while (up[k] !== k) k = up[k] = up[up[k]]; return k; };
@@ -1624,8 +1626,25 @@
           }
       });
       const groups = new Map();
-      cand.forEach((p, k) => { const r = find(k), g = groups.get(r) || { n: 0, area: 0 }; g.n++; g.area += p.area; groups.set(r, g); });
-      cand.forEach((p, k) => { const g = groups.get(find(k)); if (g.n >= 3 && g.area >= 40) p.keep = true; });
+      cand.forEach((p, k) => {
+        const r = find(k), g = groups.get(r) || { n: 0, area: 0, bx0: w, by0: h, bx1: -1, by1: -1, list: [] };
+        g.n++; g.area += p.area; g.list.push(p);
+        g.bx0 = Math.min(g.bx0, p.bx0); g.by0 = Math.min(g.by0, p.by0); g.bx1 = Math.max(g.bx1, p.bx1); g.by1 = Math.max(g.by1, p.by1);
+        groups.set(r, g);
+      });
+      const K = { x0: w, y0: h, x1: -1, y1: -1 }, grow = b => { K.x0 = Math.min(K.x0, b.bx0); K.y0 = Math.min(K.y0, b.by0); K.x1 = Math.max(K.x1, b.bx1); K.y1 = Math.max(K.y1, b.by1); };
+      for (const p of pieces) if (p.keep) grow(p);
+      const NEAR = 24, left = [...groups.values()].filter(g => g.n >= 3 && g.area >= 40);
+      for (let added = K.x1 >= 0; added;) {
+        added = false;
+        for (let t = left.length - 1; t >= 0; t--) {
+          const g = left[t];
+          if (g.bx0 - K.x1 <= NEAR && K.x0 - g.bx1 <= NEAR && g.by0 - K.y1 <= NEAR && K.y0 - g.by1 <= NEAR) {
+            for (const p of g.list) p.keep = true;
+            grow(g); left.splice(t, 1); added = true;
+          }
+        }
+      }
     }
     for (const p of pieces) if (p.keep) { x0 = Math.min(x0, p.bx0); y0 = Math.min(y0, p.by0); x1 = Math.max(x1, p.bx1); y1 = Math.max(y1, p.by1); }
     if (x1 < 0) return 'Nothing stands out from the background';

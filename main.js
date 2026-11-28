@@ -421,7 +421,7 @@ app.whenReady().then(async () => {
     if (settings.movedNotice && inApplications()) {
       settings.movedNotice = false;
       saveSettings();
-      await dialog.showMessageBox({ type: 'info', message: 'Cutout is now in the Applications folder', detail: 'If a copy is still where you opened it from, such as Downloads, you can delete it.', buttons: ['OK'] });
+      await dialog.showMessageBox({ type: 'info', message: 'Cutout is now in the Applications folder', detail: 'If the copy you opened is still there, you can delete it (in Downloads, for example), or eject its disk image.', buttons: ['OK'] });
     }
   }
   if (!win) createWindow(); // a file opened while the Move question showed may have opened it already

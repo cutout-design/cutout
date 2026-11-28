@@ -14,7 +14,7 @@
     "dist": "electron-builder --win --x64",
     "dist:arm64": "electron-builder --win --arm64 -c.nsis.artifactName=Cutout-${version}-arm64.${ext} -c.publish.channel=latest-arm64",
     "dist:store": "electron-builder --win appx --x64 --arm64",
-    "dist:mac": "electron-builder --mac --arm64"
+    "dist:mac": "electron scripts/make-dmg-background.js && electron-builder --mac --arm64"
   },
   "build": {
     "appId": "app.cutout",
