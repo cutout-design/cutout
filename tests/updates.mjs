@@ -20,8 +20,10 @@ export default async function updateTests({ electron, here, wait }) {
   const sha512 = createHash('sha512').update(bytes).digest('base64');
   const yml = `version: 99.0.0\nfiles:\n  - url: ${file}\n    sha512: ${sha512}\n    size: ${bytes.length}\npath: ${file}\nsha512: ${sha512}\nreleaseDate: '2026-11-27T00:00:00.000Z'\n`;
   const requests = [];
+  let hang = false; const hung = []; // hang: the server never answers the check (a dead connection)
   const server = http.createServer((req, res) => {
     requests.push({ url: req.url, headers: req.headers });
+    if (hang && req.url.startsWith("/latest")) { hung.push(res); return; }
     if (/^\/latest[\w-]*\.yml/.test(req.url)) { res.writeHead(200, { 'Content-Type': 'text/yaml' }); res.end(yml); }
     else if (req.url.startsWith('/' + file) && !req.url.includes('.blockmap')) { res.writeHead(200, { 'Content-Length': bytes.length }); res.end(bytes); }
     else { res.writeHead(404); res.end(); }
@@ -33,7 +35,7 @@ export default async function updateTests({ electron, here, wait }) {
   const port = 9800 + Math.floor(Math.random() * 150);
   const args = [path.join(here, 'harness.js'), `--remote-debugging-port=${port}`];
   if (process.platform === 'linux') args.push('--no-sandbox');
-  const app = spawn(electron, args, { cwd: path.join(here, '..'), stdio: 'ignore', env: { ...process.env, CUTOUT_UPDATE_CONFIG: config } });
+  const app = spawn(electron, args, { cwd: path.join(here, '..'), stdio: 'ignore', env: { ...process.env, CUTOUT_UPDATE_CONFIG: config, CUTOUT_UPDATE_TIMEOUT: '3000' } });
   let ws;
   try {
     let page;
@@ -88,6 +90,14 @@ export default async function updateTests({ electron, here, wait }) {
     // (seen after main's accessibility and store changes were merged in; a person can't click that fast)
     await press('Later'); await wait(1500);
     check('Later closes the dialog', !(await openDialog()));
+
+    // 4b. A check the server never answers gives up (timeout, 3 s in tests), and the next check still works
+    hang = true;
+    const dead = await ev('window.cutoutNative.checkForUpdates()');
+    hang = false;
+    const next = await ev(`Promise.race([window.cutoutNative.checkForUpdates(), new Promise(r => setTimeout(() => r({ status: 'still waiting' }), 2500))])`);
+    check('a check with no answer gives up, and the next check works', dead && dead.status === 'error' && next && next.status === 'available', JSON.stringify([dead, next]));
+    for (const r of hung) { try { r.destroy(); } catch (_) { /* gone */ } }
 
     // 5. Download Update → "ready" dialog (Windows; the Mac needs a signed app, Linux has no updater)
     if (process.platform === 'win32') {

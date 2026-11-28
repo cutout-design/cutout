@@ -327,7 +327,7 @@ Cutout needs a mouse (or trackpad) and a keyboard, so it doesn't work on phones 
 
 The web version has also been lightly tested in Firefox and in WebKit, the engine behind Safari (not in Safari itself). In both, Save always downloads the file, the eyedropper (I) opens the color picker instead of picking from anywhere on screen, and dragging a layer out of the window doesn't work. In WebKit, copying pixels to the clipboard didn't work, and Figma layers with a blur aren't pasted.
 
-On a Mac, Cutout updates itself only from the Applications folder. If you open it from somewhere else (such as Downloads), it asks once whether to move itself there. If you choose Do Not Move, drag Cutout to the Applications folder yourself before updating.
+On a Mac, Cutout updates itself only from the Applications folder. If you open it from somewhere else (such as Downloads), it asks once whether to move itself there. If you choose Do Not Move, drag Cutout to the Applications folder yourself before updating. Move to Applications can leave the copy you opened behind (macOS sometimes doesn't let Cutout remove it); Cutout then says so once, and you can delete that copy.
 
 On a Mac, the desktop app has a standard menu bar (Cutout, Edit, Window, Help), and Cut, Copy, Paste, Undo and Select All work from it too. Help has User Guide (this guide) and Privacy Policy.
 

@@ -287,8 +287,17 @@ async function checkForUpdate(manual) {
   if (!u) return manual ? { status: 'error' } : null;
   if (update.ready) return { status: 'ready', version: update.ready };
   try {
-    // A server that never answers would leave Check for Updates waiting forever: give up after 30 s
-    const r = await Promise.race([u.checkForUpdates(), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), 30000))]);
+    // A server that never answers would leave Check for Updates waiting forever: give up after 30 s.
+    // electron-updater hands a check that is still running to every later caller, so after a timeout
+    // it is dropped (its checkForUpdatesPromise), or every later check would wait on the dead one too.
+    const check = u.checkForUpdates();
+    check.catch(() => {}); // a dropped check may still fail later: nobody waits for it then
+    let timer;
+    const r = await Promise.race([check, new Promise((_, no) => { timer = setTimeout(() => {
+      if (u.checkForUpdatesPromise === check) u.checkForUpdatesPromise = null;
+      no(new Error('timeout'));
+    }, testFeed && process.env.CUTOUT_UPDATE_TIMEOUT ? Number(process.env.CUTOUT_UPDATE_TIMEOUT) : 30000); })])
+      .finally(() => clearTimeout(timer));
     settings.lastUpdateCheck = Date.now();
     saveSettings();
     const version = r && r.isUpdateAvailable ? String(r.updateInfo.version) : null;
@@ -393,6 +402,11 @@ app.whenReady().then(async () => {
   if (process.platform === 'darwin') {
     app.setAboutPanelOptions({ applicationName: 'Cutout', applicationVersion: app.getVersion(), version: '', copyright: '' });
     if (await offerMoveToApplications()) return; // moved: the copy in Applications starts instead
+    if (settings.movedNotice && app.isInApplicationsFolder()) {
+      settings.movedNotice = false;
+      saveSettings();
+      await dialog.showMessageBox({ type: 'info', message: 'Cutout is now in the Applications folder', detail: 'If a copy is still where you opened it from, such as Downloads, you can delete it.', buttons: ['OK'] });
+    }
   }
   if (!win) createWindow(); // a file opened while the Move question showed may have opened it already
 });
@@ -400,9 +414,11 @@ app.whenReady().then(async () => {
 // from Downloads, macOS runs a hidden read-only copy and the update fails. So offer to move it there
 // (as many Mac apps do). Asked once: Do Not Move means never ask again (an update then says why it
 // can't install). Not when opened with files: moving restarts Cutout, and the files would be lost.
+let askingMove = false;
 async function offerMoveToApplications() {
   if (!updatesOn || !app.isPackaged || settings.noMoveOffer || pendingFiles.length) return false;
   try { if (app.isInApplicationsFolder()) return false; } catch (_) { return false; }
+  askingMove = true; // a Dock click meanwhile must not open a window behind the question
   const r = await dialog.showMessageBox({
     type: 'question',
     message: 'Move Cutout to the Applications folder?',
@@ -410,20 +426,29 @@ async function offerMoveToApplications() {
     buttons: ['Move to Applications', 'Do Not Move'],
     defaultId: 0,
     cancelId: 1,
-  });
+  }).finally(() => { askingMove = false; });
   if (r.response === 0) return moveToApplications();
   settings.noMoveOffer = true;
   saveSettings();
   return false;
 }
 function moveToApplications() {
+  // Electron copies Cutout to Applications, then trashes the original; macOS can block that last step
+  // without a word (the original in Downloads, for one), leaving a second copy. So the copy in
+  // Applications says once that the old one can be deleted (movedNotice, read at the next launch).
+  settings.movedNotice = true;
+  saveSettings();
   try {
     // An older Cutout already there is replaced; one that is running is left alone.
-    return app.moveToApplicationsFolder({ conflictHandler: type => type === 'exists' });
+    const moved = app.moveToApplicationsFolder({ conflictHandler: type => type === 'exists' });
+    if (!moved) { settings.movedNotice = false; saveSettings(); }
+    return moved;
   } catch (_) {
+    settings.movedNotice = false;
+    saveSettings();
     dialog.showMessageBoxSync({ type: 'warning', message: 'Couldn’t move Cutout', detail: 'Drag Cutout to the Applications folder in Finder.' });
     return false;
   }
 }
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-app.on('activate', () => { if (!win) createWindow(); });
+app.on('activate', () => { if (!win && !askingMove) createWindow(); });

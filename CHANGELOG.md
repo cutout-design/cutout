@@ -2,6 +2,13 @@
 
 What's new in each version of Cutout. The section for a version becomes its release notes on GitHub.
 
+## 2.0.1 (2026-11-27)
+
+- Mac: after Move to Applications, Cutout says once that the copy you opened it from can be deleted, when macOS left it behind.
+- Mac: clicking Cutout in the Dock while it asks about moving to Applications no longer opens a window behind the question.
+- Check for Updates works again after a check that got no answer (on a connection that never responds); before, later checks waited until Cutout was restarted.
+- Pasted SVG markup with an <svg> tag inside a comment before the real one gets the right size.
+
 ## 2.0.0 (2026-11-27)
 
 Cutout 2.0 is signed on Windows and Mac and keeps itself up to date.

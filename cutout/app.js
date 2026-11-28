@@ -980,7 +980,19 @@
     // Entity declarations can expand into huge text (a "billion laughs" file). Real SVGs from
     // Figma, design tools and icon sets don't use them, so refuse.
     if (/<!ENTITY/i.test(svg)) throw new Error('SVG with entities');
-    const m = /<svg\b[^>]*>/i.exec(svg);
+    // The real <svg> tag: after an XML declaration and any comments (a comment can itself contain
+    // "<svg …>" text, which must not be taken for the tag; extractSvg allows such comments).
+    let at = svg.search(/\S/);
+    if (at >= 0 && /^<\?xml/i.test(svg.slice(at, at + 5))) { const e = svg.indexOf('>', at); at = e < 0 ? -1 : e + 1; }
+    while (at >= 0) {
+      while (at < svg.length && /\s/.test(svg[at])) at++;
+      if (!svg.startsWith('<!--', at)) break;
+      const e = svg.indexOf('-->', at + 4);
+      at = e < 0 ? -1 : e + 3;
+    }
+    const tagRe = /<svg\b[^>]*>/iy;
+    tagRe.lastIndex = Math.max(at, 0);
+    const m = at < 0 ? null : tagRe.exec(svg);
     if (!m) throw new Error('Not valid SVG');
     let tag = m[0];
     const attr = name => { const a = new RegExp(`\\s${name}\\s*=\\s*(["'])(.*?)\\1`, 'i').exec(tag); return a ? a[2] : null; };

@@ -135,6 +135,8 @@ window.moreTests = async () => {
     check('SVG paste: draws the shapes', r.layer && px(r.layer, 20, 15).join() === '255,0,0,255', r.layer ? px(r.layer, 20, 15).join() : '');
     r = await pasteSvg('<svg viewBox="0 0 64 32"><circle cx="16" cy="16" r="16" fill="blue" stroke-width="3"/></svg>');
     check('SVG paste: no namespace, size from viewBox', r.layer && r.layer.canvas.width === 64 && r.layer.canvas.height === 32, r.layer ? `${r.layer.canvas.width}x${r.layer.canvas.height}` : 'no layer');
+    r = await pasteSvg('<!-- old: <svg width="500" height="400"> -->\n<svg xmlns="http://www.w3.org/2000/svg" width="24" height="12"><rect width="24" height="12" fill="#00FF00"/></svg>');
+    check('SVG paste: size from the real tag, not an <svg> inside a comment before it', r.layer && r.layer.canvas.width === 24 && r.layer.canvas.height === 12, r.layer ? `${r.layer.canvas.width}x${r.layer.canvas.height}` : 'no layer');
     window.__svgRan = false;
     r = await pasteSvg('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" onload="window.__svgRan=true"><script>window.__svgRan=true</script><rect width="10" height="10" fill="red"/></svg>');
     check('SVG paste: scripts in the markup never run', r.layer && window.__svgRan === false, `ran ${window.__svgRan}`);
