@@ -1594,15 +1594,40 @@
     for (const p of pieces) {
       if (!p.keep || p.area === maxArea) continue;
       if ((p.by1 < D && alongLine(lineAt.r0, p.bx0, p.bx1)) || (p.by0 >= h - D && alongLine(lineAt.r1, p.bx0, p.bx1)) ||
-          (p.bx1 < D && alongLine(lineAt.c0, p.by0, p.by1)) || (p.bx0 >= w - D && alongLine(lineAt.c1, p.by0, p.by1))) p.keep = false;
+          (p.bx1 < D && alongLine(lineAt.c0, p.by0, p.by1)) || (p.bx0 >= w - D && alongLine(lineAt.c1, p.by0, p.by1))) { p.keep = false; p.line = true; }
     }
     // dust is judged against the object: pieces far smaller than the biggest one don't count
     // (on a big scan a speck can be dozens of pixels)
     const biggest = pieces.reduce((m, p) => Math.max(m, p.keep ? p.area : 0), 0);
-    for (const p of pieces) {
-      if (p.keep) p.keep = p.area >= Math.max(12, biggest * 0.002);
-      if (p.keep) { x0 = Math.min(x0, p.bx0); y0 = Math.min(y0, p.by0); x1 = Math.max(x1, p.bx1); y1 = Math.max(y1, p.by1); }
+    for (const p of pieces) if (p.keep) p.keep = p.area >= Math.max(12, biggest * 0.002);
+    // ...but small pieces close together are content, not dust: the letters of a word and lines of
+    // text (each letter is its own small piece, tiny next to a banner in a UI screenshot), and a faint
+    // card border, which breaks into thin straight pieces at its rounded corners. Dropped pieces within
+    // 14 px of each other form groups; a group of 3 or more counts. Scattered specks stay dust, and
+    // leftovers of an edge line are never brought back.
+    const cand = pieces.filter(p => !p.keep && !p.line && p.area >= 3), G = 14;
+    if (cand.length > 1 && cand.length <= 20000) {
+      const up = cand.map((_, k) => k), find = k => { while (up[k] !== k) k = up[k] = up[up[k]]; return k; };
+      const cell = 32, grid = new Map(), key = (cx, cy) => cx * 65536 + cy;
+      cand.forEach((p, k) => {
+        for (let cx = Math.floor((p.bx0 - G) / cell); cx <= Math.floor((p.bx1 + G) / cell); cx++)
+          for (let cy = Math.floor((p.by0 - G) / cell); cy <= Math.floor((p.by1 + G) / cell); cy++) {
+            const list = grid.get(key(cx, cy));
+            if (list) for (const j of list) {
+              const q = cand[j];
+              if (p.bx0 - q.bx1 <= G && q.bx0 - p.bx1 <= G && p.by0 - q.by1 <= G && q.by0 - p.by1 <= G) up[find(j)] = find(k);
+            }
+          }
+        for (let cx = Math.floor(p.bx0 / cell); cx <= Math.floor(p.bx1 / cell); cx++)
+          for (let cy = Math.floor(p.by0 / cell); cy <= Math.floor(p.by1 / cell); cy++) {
+            const kk = key(cx, cy); (grid.get(kk) || grid.set(kk, []).get(kk)).push(k);
+          }
+      });
+      const groups = new Map();
+      cand.forEach((p, k) => { const r = find(k), g = groups.get(r) || { n: 0, area: 0 }; g.n++; g.area += p.area; groups.set(r, g); });
+      cand.forEach((p, k) => { const g = groups.get(find(k)); if (g.n >= 3 && g.area >= 40) p.keep = true; });
     }
+    for (const p of pieces) if (p.keep) { x0 = Math.min(x0, p.bx0); y0 = Math.min(y0, p.by0); x1 = Math.max(x1, p.bx1); y1 = Math.max(y1, p.by1); }
     if (x1 < 0) return 'Nothing stands out from the background';
     // An edge line that runs along a side everywhere except where the object is: the object covers
     // it, so the object reaches that side (its strip there can be as white as the paper).

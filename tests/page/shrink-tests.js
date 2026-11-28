@@ -116,6 +116,32 @@ window.shrinkTests = async () => {
     C.setTool('marquee'); await drag(150, 120, 460, 260); await shrink();
     check('screenshot: snaps to the button', near([220, 170, 160, 44], 1), sel());
 
+    // UI screenshot: a title, a big gradient banner and a row of white cards with small text, on a flat
+    // light background. Small text (each letter its own speck next to the big banner) must count.
+    const ui = (avatars) => image(960, 552, (g, w, h) => {
+      g.fillStyle = '#F6F7FB'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#111827'; g.font = 'bold 22px Segoe UI, Arial'; g.fillText('Lisbon weekend', 240, 66);
+      g.fillStyle = '#6B7280'; g.font = '12px Segoe UI, Arial'; g.fillText('3 days, 2 people', 240, 86);
+      if (avatars) for (let k = 0; k < 3; k++) { g.fillStyle = ['#F59E0B', '#10B981', '#6366F1'][k]; g.beginPath(); g.arc(820 + k * 22, 62, 12, 0, 7); g.fill(); }
+      const gr = g.createLinearGradient(240, 100, 860, 320); gr.addColorStop(0, '#0EA5E9'); gr.addColorStop(1, '#8B5CF6');
+      g.fillStyle = gr; g.beginPath(); g.roundRect(240, 100, 620, 220, 16); g.fill();
+      for (let k = 0; k < 3; k++) {
+        const x = 240 + k * 214;
+        g.fillStyle = '#FFFFFF'; g.strokeStyle = '#E5E7EB'; g.lineWidth = 1; g.beginPath(); g.roundRect(x + 0.5, 340.5, 192, 100, 12); g.fill(); g.stroke();
+        g.fillStyle = ['#F97316', '#22C55E', '#3B82F6'][k]; g.beginPath(); g.roundRect(x + 14, 354, 28, 28, 8); g.fill();
+        g.fillStyle = '#111827'; g.font = '13px Segoe UI, Arial'; g.fillText(['Flights', 'Hotel', 'Tours'][k], x + 14, 404);
+        g.fillStyle = '#6B7280'; g.font = '11px Segoe UI, Arial'; g.fillText(['TAP 1234, Fri 9:40', 'Alfama, 2 nights', 'Sintra, Sat'][k], x + 14, 424);
+      }
+      g.fillStyle = '#9CA3AF'; g.font = '11px Segoe UI, Arial'; g.fillText('Updated 2 hours ago', 240, 462);
+    });
+    for (const avatars of [true, false]) {
+      reset(); C.addImageLayer(ui(avatars), 'UI'); await wait(30);
+      C.setTool('marquee'); await drag(216, 16, 946, 528); await shrink();
+      const s = S.sel, top = 49, bottom = 462; // the title's letters start at y 49, the caption ends near 462
+      check(`UI screenshot${avatars ? '' : ' without avatars'}: keeps the title, banner, cards and the small text under them`,
+        s && s.y <= top + 3 && s.y >= top - 3 && s.y + s.h >= bottom && s.y + s.h <= bottom + 6 && s.x <= 241 && s.x >= 236 && s.x + s.w >= (avatars ? 875 : 860) && s.x + s.w <= (avatars ? 876 : 861) + 6, sel());
+    }
+
     // Transparent layer
     reset();
     C.addImageLayer(image(500, 400, g => { g.fillStyle = '#e11d48'; g.beginPath(); g.arc(250, 200, 60, 0, 7); g.fill(); }), 'Clear'); await wait(30);
