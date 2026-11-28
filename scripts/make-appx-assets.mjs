@@ -19,10 +19,10 @@ fs.mkdirSync(out, { recursive: true });
 
 // The tile artwork in its 32-unit grid (same as installer/icon-mac.svg without the Mac shadow).
 const ART = `
-  <defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#38BDF8"/><stop offset="1" stop-color="#2563EB"/></linearGradient></defs>
+  <defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6CB4FF"/><stop offset=".5" stop-color="#0073E7"/><stop offset="1" stop-color="#00478F"/></linearGradient></defs>
   <rect width="32" height="32" rx="7.2" fill="url(#b)"/>
   <path d="M6 6h7v2.5H8.5V13H6zM26 26h-7v-2.5h4.5V19H26z" fill="#fff"/>
-  <rect x="11.3" y="11.6" width="11" height="11" rx="1.5" fill="#1E40AF" fill-opacity=".5"/>
+  <rect x="11.3" y="11.6" width="11" height="11" rx="1.5" fill="#003670" fill-opacity=".5"/>
   <rect x="10.5" y="10.5" width="11" height="11" rx="1.5" fill="#fff"/>`;
 
 // w × h canvas, icon of size `icon` px centered (transparent around it).
