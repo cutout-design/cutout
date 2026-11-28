@@ -1,4 +1,4 @@
-# Privacy
+# Privacy Policy
 
 Effective date: November 27, 2026
 

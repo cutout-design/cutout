@@ -1,7 +1,8 @@
 # Mac App Store sandbox check: builds Cutout's Mac App Store version (sandboxed), signs it ad-hoc and checks
 # on a Mac that what the sandbox could break still works: files from Finder, the real Save panel, saving
 # again, JPEG, the clipboard, the network and settings (tests/mas/sandbox-check.mjs). Runs when the code
-# it depends on changes, on version tags and by hand. Needs no Apple certificate and stores no build files.
+# it depends on changes, on version tags and by hand. Needs no Apple certificate. Runs by hand also keep the
+# sandboxed app for a day, to try by hand on a Mac (see the last steps).
 name: Mac App Store sandbox
 
 on:
@@ -59,3 +60,17 @@ jobs:
           bash tests/mas/sign-adhoc.sh "$app"
       - name: Run the sandbox check
         run: node tests/mas/sandbox-check.mjs "$APP"
+      # Runs by hand also offer the sandboxed app as a one-day download, to try by hand on a Mac what the
+      # check can't (drag a layer out, drop files, the color picker) without TestFlight or an Apple account.
+      # Ad-hoc signed: macOS asks to confirm it once (System Settings → Privacy & Security → Open Anyway).
+      # Delete it afterwards: it shares the app ID with the installed Cutout.
+      - name: Zip the sandboxed app (runs by hand)
+        if: github.event_name == 'workflow_dispatch'
+        run: ditto -c -k --keepParent "$APP" Cutout-sandboxed-test.zip
+      - uses: actions/upload-artifact@v7
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: cutout-sandboxed-test
+          path: Cutout-sandboxed-test.zip
+          if-no-files-found: error
+          retention-days: 1
