@@ -192,12 +192,19 @@ jobs:
           (cd out && sha256sum "Cutout-$version.exe" "Cutout-$version-arm64.exe" "Cutout-$version.zip" > SHA256SUMS.txt)
           cat out/SHA256SUMS.txt
           # Same file names on both platforms; the label shown on the release page says which is which.
+          # The update files that installed copies read (latest*.yml, and .blockmap for partial downloads)
+          # get plain labels too; their file names must stay as electron-builder makes them.
           gh release create "$GITHUB_REF_NAME" \
             "out/Cutout-$version.exe#Cutout $version for Windows (x64)" \
             "out/Cutout-$version-arm64.exe#Cutout $version for Windows (ARM64)" \
             "out/Cutout-$version.zip#Cutout $version for Mac" \
             "out/SHA256SUMS.txt#Checksums (SHA-256)" \
-            out/latest.yml out/latest-arm64.yml out/latest-mac.yml out/*.blockmap \
+            "out/latest.yml#Update info for Windows (x64)" \
+            "out/latest-arm64.yml#Update info for Windows (ARM64)" \
+            "out/latest-mac.yml#Update info for Mac" \
+            "out/Cutout-$version.exe.blockmap#Update data for Windows (x64)" \
+            "out/Cutout-$version-arm64.exe.blockmap#Update data for Windows (ARM64)" \
+            "out/Cutout-$version.zip.blockmap#Update data for Mac" \
             --repo "$GITHUB_REPOSITORY" \
             --title "Cutout $version" \
             --notes-file notes.md
