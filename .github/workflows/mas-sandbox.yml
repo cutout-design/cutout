@@ -1,0 +1,61 @@
+# Mac App Store sandbox check: builds Cutout's Mac App Store version (sandboxed), signs it ad-hoc and checks
+# on a Mac that what the sandbox could break still works: files from Finder, the real Save panel, saving
+# again, JPEG, the clipboard, the network and settings (tests/mas/sandbox-check.mjs). Runs when the code
+# it depends on changes, on version tags and by hand. Needs no Apple certificate and stores no build files.
+name: Mac App Store sandbox
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - main.js
+      - preload.js
+      - package.json
+      - package-lock.json
+      - installer/entitlements.mas*.plist
+      - tests/mas/**
+      - .github/workflows/mas-sandbox.yml
+  pull_request:
+    paths:
+      - main.js
+      - preload.js
+      - package.json
+      - package-lock.json
+      - installer/entitlements.mas*.plist
+      - tests/mas/**
+      - .github/workflows/mas-sandbox.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read # the check only reads the code
+
+jobs:
+  sandbox:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      # The Mac icon is an Icon Composer file (installer/Cutout.icon): compiling it needs Xcode 26's actool.
+      - name: Use Xcode 26 or newer
+        run: |
+          x=$(ls -d /Applications/Xcode_2[6-9]*.app /Applications/Xcode_[3-9][0-9]*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$x" ]; then echo "No Xcode 26 or newer on this runner"; ls -d /Applications/Xcode*.app; exit 1; fi
+          sudo xcode-select -s "$x"
+      - run: npm ci
+      - name: Build the Mac App Store version (unsigned)
+        run: npx electron-builder --mac mas-dev --arm64 --config tests/mas/build-config.js --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Sign it ad-hoc with the store's sandbox entitlements
+        run: |
+          app=$(find dist -maxdepth 2 -name Cutout.app -path '*mas*' | head -1)
+          if [ -z "$app" ]; then echo "No Mac App Store build in dist:"; ls dist; exit 1; fi
+          echo "APP=$app" >> "$GITHUB_ENV"
+          bash tests/mas/sign-adhoc.sh "$app"
+      - name: Run the sandbox check
+        run: node tests/mas/sandbox-check.mjs "$APP"
