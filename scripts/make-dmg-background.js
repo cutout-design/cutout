@@ -10,8 +10,8 @@ const path = require('path');
 
 const W = 520, H = 320;           // the window's content size in points (= the 1x image); 20 more than the
                                   // content needs, for Finder's bottom bar (at 300 it showed a scrollbar)
-const HEAD_Y = 76;                // heading center
-const ICON_Y = 161;               // icon centers (build.dmg.contents y)
+const HEAD_Y = 56;                // heading center
+const ICON_Y = 141;               // icon centers (build.dmg.contents y)
 const ARROW_X = 260;              // between the icons at x 149 and 371 (build.dmg.contents x)
 
 const html = scale => `<!doctype html><meta charset="utf-8"><style>
