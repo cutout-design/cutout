@@ -246,6 +246,13 @@ function buildMacMenu() {
       ],
     },
     { role: 'windowMenu' }, // Minimize, Zoom, Close…
+    {
+      role: 'help', // macOS adds its menu search field here
+      submenu: [
+        { label: 'Cutout Help', click: () => shell.openExternal('https://cutout.design/guide/') },
+        { label: 'Privacy', click: () => shell.openExternal('https://cutout.design/privacy/') },
+      ],
+    },
   ]);
 }
 Menu.setApplicationMenu(process.platform === 'darwin' ? buildMacMenu() : null);

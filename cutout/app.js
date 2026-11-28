@@ -2837,11 +2837,11 @@
       { label: 'System', checked: t === 'system', run: () => setTheme('system') },
       { label: 'Light', checked: t === 'light', run: () => setTheme('light') },
       { label: 'Dark', checked: t === 'dark', run: () => setTheme('dark') },
-      '-',
-      // On the Mac app, About is in the menu bar (Cutout → About Cutout)
-      ...(IS_MAC && Platform.isNative ? [] : [{ label: 'About Cutout', run: openAbout }]),
-      // The privacy page (app stores ask for a link in the app). Electron opens it in the browser.
-      { label: 'Privacy', run: () => window.open('https://cutout.design/privacy/', '_blank', 'noopener') },
+      // On the Mac app, About and Privacy are in the menu bar (Cutout → About Cutout, Help → Privacy).
+      // Privacy: the privacy page (app stores ask for a link in the app); Electron opens it in the browser.
+      ...(IS_MAC && Platform.isNative ? [] : ['-',
+        { label: 'About Cutout', run: openAbout },
+        { label: 'Privacy', run: () => window.open('https://cutout.design/privacy/', '_blank', 'noopener') }]),
     ], r.left, r.bottom + 4, kb);
   });
 
