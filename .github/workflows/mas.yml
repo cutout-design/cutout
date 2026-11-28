@@ -1,6 +1,7 @@
 # Builds the Mac App Store version for an existing release tag and uploads it to App Store Connect, by hand
 # (Actions tab → Mac App Store → Run workflow → tag, e.g. v1.4.0). The upload lands in TestFlight; submitting
-# it for review stays a step in App Store Connect. Kept apart from release.yml, like the Microsoft Store
+# it for review stays a step in App Store Connect. Run it with "main" (or another branch) to check the signing
+# without a release: it builds, signs and has App Store Connect validate the package, but never uploads. Kept apart from release.yml, like the Microsoft Store
 # packages (store.yml): the GitHub Release keeps exactly its files.
 #
 # The sandboxed build itself is tested by mas-sandbox.yml (runs on every version tag). This one only
@@ -18,11 +19,11 @@ name: Mac App Store
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: Release tag to build (for example v1.4.0)
+      ref:
+        description: Release tag to upload (for example v1.4.0), or a branch such as main to check only
         required: true
       upload:
-        description: Upload to App Store Connect (off = build and check only)
+        description: Upload to App Store Connect (release tags only; off = build and check only)
         type: boolean
         default: true
 
@@ -36,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ inputs.ref }}
       - uses: actions/setup-node@v7
         with:
           node-version: lts/*
@@ -49,8 +50,9 @@ jobs:
           sudo xcode-select -s "$x"
       - run: npm ci
       - name: Check the tag matches package.json
+        if: startsWith(inputs.ref, 'v')
         env:
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ inputs.ref }}
         run: |
           pkg=$(node -p "require('./package.json').version")
           if [ "v$pkg" != "$TAG" ]; then echo "Tag $TAG but package.json $pkg" >&2; exit 1; fi
@@ -83,9 +85,9 @@ jobs:
           codesign --verify --deep --strict "$app"
           codesign -d --entitlements - --xml "$app" | plutil -p - | grep -E "app-sandbox|user-selected|network|application-groups"
           echo "Signed package: $pkg"
-      - name: Upload to App Store Connect (TestFlight)
-        if: inputs.upload
+      - name: Validate, and upload to App Store Connect (TestFlight) for a release tag
         env:
+          UPLOAD: ${{ inputs.upload && startsWith(inputs.ref, 'v') }}
           APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
@@ -94,6 +96,10 @@ jobs:
           key=~/.appstoreconnect/private_keys/AuthKey_$APPLE_API_KEY_ID.p8
           echo "$APPLE_API_KEY_P8" > "$key"
           xcrun altool --validate-app --type macos --file "$PKG" --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER"
-          xcrun altool --upload-app --type macos --file "$PKG" --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER"
+          if [ "$UPLOAD" = "true" ]; then
+            xcrun altool --upload-app --type macos --file "$PKG" --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER"
+            echo "Uploaded. It shows in App Store Connect → TestFlight after Apple processes it (usually minutes)."
+          else
+            echo "Validated only, not uploaded (a branch, or upload off)."
+          fi
           rm -f "$key"
-          echo "Uploaded. It shows in App Store Connect → TestFlight after Apple processes it (usually minutes)."
