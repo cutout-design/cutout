@@ -5,8 +5,14 @@ What's new in each version of Cutout. The section for a version becomes its rele
 ## Unreleased
 
 - Automatic updates in the desktop app: once a day Cutout checks GitHub for a new version and offers Download Update, Later or Skip This Version; the update downloads in the background and installs with Restart to Update, or when you quit. Check for Updates is in the Cutout menu (on a Mac, the Cutout menu in the menu bar). The check sends nothing about you: no version, no ID, no language, no cookies. Updating from this version on is automatic; to get here, install it once by hand. On a Mac, Cutout offers to move itself to the Applications folder when opened from elsewhere, since it can only update itself there.
+- About Cutout links to the User Guide and Cutout's privacy policy. On the Mac app, the menu bar has a new Help menu with User Guide and Privacy Policy.
+- Dragging a marquee, moving layers or dragging a selection box to the edge of the canvas scrolls the view, as in Fireworks and Figma. It speeds up as you go past the edge (full speed 40 px past it, on every side), and the selection keeps growing while you hold the pointer still.
+- Windows: the installers and the app are code-signed, so Windows shows who published them.
+- Mac: the app is signed and notarized by Apple, so it opens after the usual "downloaded from the Internet" question, without a trip to Privacy & Security.
 - Pasting SVG markup (Figma's Copy as SVG) is safer: Cutout reads the size straight from the SVG and lets the browser draw it as an image, without loading the markup as a document. SVG that declares entities is refused, and text made to look like many comments before an SVG can no longer freeze the window.
 - Each release now lists SHA-256 checksums of its files, and each file comes with build provenance, a signed record that it was built from this repository. SECURITY.md explains how to check a download.
+- New blue: buttons, menus and the app icon use a deeper blue (#0073E7) so white text on it is easy to read; in dark mode, outlines, focus rings and checkmarks use a lighter blue that stands out on the dark panels.
+- Screen readers: the canvas is the window's main region and the options bar is its own region, so both can be jumped to; every field has a spoken name (marquee width and height, fill choices, eraser size, the Canvas size background color). Nothing changes on screen.
 
 ## 1.3.5 (2026-11-26)
 

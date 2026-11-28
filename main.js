@@ -156,7 +156,9 @@ ipcMain.handle('file:save-dialog', async (_e, suggestedName) => {
   const dir = settings.saveDir && fs.existsSync(settings.saveDir) ? settings.saveDir : app.getPath('desktop');
   const name = String(suggestedName || 'cutout.png').replace(/[\\/:*?"<>|]/g, '-');
   const r = await dialog.showSaveDialog(win, {
-    defaultPath: path.join(dir, name),
+    // Mac App Store build (sandboxed): the folder saved last may not be readable after a relaunch, so
+    // pass only the name and let the system's Save panel open in the folder it remembers.
+    defaultPath: process.mas ? name : path.join(dir, name),
     filters: /\.jpe?g$/i.test(name) ? [jpg, png] : [png, jpg],
   });
   if (r.canceled || !r.filePath) return null;
@@ -168,6 +170,9 @@ ipcMain.handle('file:save-dialog', async (_e, suggestedName) => {
 ipcMain.handle('file:write', async (_e, filePath, bytes) => {
   if (!savePaths.has(filePath)) throw new Error('Not a chosen save location');
   const data = Buffer.from(bytes);
+  // Mac App Store build (sandboxed): the Save panel grants this one file, not its folder, so a temp file
+  // next to it can't be created. Write the file itself (tests/mas/sandbox-check.mjs checks this).
+  if (process.mas) { await fs.promises.writeFile(filePath, data); return; }
   const tmp = `${filePath}.cutout-tmp`;
   await fs.promises.writeFile(tmp, data);
   // Replace in one step, so a failed save never leaves half a file. Right after a write, Dropbox,
@@ -230,10 +235,12 @@ app.on('will-quit', () => {
 // release is out. The requests carry nothing about the user or the computer: user agent "Cutout", no
 // version, no ID, no language, no cookies (electron-updater has a session of its own). The page shows the dialogs:
 // "available" (Download Update / Later / Skip This Version), then "ready" (Restart to Update / Later;
-// otherwise the update installs when Cutout quits). Off when running from source, except in tests.
+// otherwise the update installs when Cutout quits). Off when running from source, except in tests, and in the
+// Microsoft Store and Mac App Store versions: the store updates those (process.windowsStore / process.mas).
 const DAY = 24 * 60 * 60 * 1000;
 const testFeed = !app.isPackaged && process.env.CUTOUT_UPDATE_CONFIG; // tests: an app-update.yml for a local server
-const updatesOn = (app.isPackaged && process.platform !== 'linux') || !!testFeed;
+const fromStore = !!(process.windowsStore || process.mas);
+const updatesOn = (app.isPackaged && process.platform !== 'linux' && !fromStore) || !!testFeed;
 let updater = null;
 let installOnClose = false;
 const update = { version: null, ready: null, downloading: null, timer: null };
@@ -367,6 +374,15 @@ function buildMacMenu() {
       ],
     },
     { role: 'windowMenu' }, // Minimize, Zoom, Close…
+    {
+      role: 'help', // macOS adds its menu search field here
+      submenu: [
+        { label: 'User Guide', click: () => shell.openExternal('https://cutout.design/guide/') },
+        // The system's About window can't hold a link, so the Mac app has Privacy here
+        // (Windows and the browser: a link in Cutout's About box). App stores ask for one in the app.
+        { label: 'Privacy Policy', click: () => shell.openExternal('https://cutout.design/privacy/') },
+      ],
+    },
   ]);
 }
 Menu.setApplicationMenu(process.platform === 'darwin' ? buildMacMenu() : null);

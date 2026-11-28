@@ -1,8 +1,8 @@
-# Privacy
+# Privacy Policy
 
-Effective date: November 27, 2026
+Effective date: November 28, 2026
 
-**Cutout collects nothing about you.** There's no account, no analytics, no ads, no tracking, and no update check. Nothing you open, paste, or make is sent to us or to anyone else.
+**Cutout collects nothing about you.** There's no account, no analytics, no ads, and no tracking. Nothing you open, paste, or make is sent to us or to anyone else.
 
 This page covers the Cutout app for Windows and Mac, the browser version at app.cutout.design, and the website at cutout.design.
 
@@ -14,7 +14,11 @@ Cutout works on your computer. Images you open, paste, or drop in stay there. Ev
 
 When you paste a normal Figma copy that contains images, the copy holds links to those images on Figma's servers. Cutout downloads the images from Figma to draw the paste, the same way Figma does. Nothing about you or your document is sent with that request, and no cookies are sent. Figma sees the request like any web request (your IP address and the time), under [Figma's privacy policy](https://www.figma.com/legal/privacy/).
 
-This is the only time the app goes online.
+## Update check
+
+The desktop app downloaded from GitHub checks for a new version once a day, and when you choose Check for Updates. It reads the list of releases from GitHub, and downloads an update only when you choose Download Update. The request carries no version, no ID, no language, and no cookies. GitHub sees it like any web request (your IP address and the time), under GitHub's privacy statement. The browser version never checks: it is always the latest.
+
+The Figma images and the update check are the only times the app goes online.
 
 ## Settings
 

@@ -10,11 +10,11 @@ Cutout handles the quick bitmap fixes that come up while designing in Figma: cut
 
 Cut out a product photo: paste it, click the background with the magic wand, press Delete, copy it back.
 
-![Pasting a product photo, selecting its background with the magic wand, deleting it and copying the result](docs/images/cut-out-background.webp)
+![Pasting a product photo, selecting its background with the magic wand, deleting it and copying the result](docs/images/cut-out-background.gif)
 
 Remove a notification from a screenshot: draw a marquee around it, Smart fill it (Shift+Backspace), copy it back.
 
-![Pasting an app screenshot, selecting a notification with the marquee, smart-filling it from its surroundings and copying the result](docs/images/remove-notification.webp)
+![Pasting an app screenshot, selecting a notification with the marquee, smart-filling it from its surroundings and copying the result](docs/images/remove-notification.gif)
 
 <p>
 <img src="docs/images/window-light.png" alt="The Cutout window in the light theme, with the magic wand selecting the background around a bottle" width="49%">
@@ -27,9 +27,9 @@ Available as a desktop app for **Windows** (x64 and ARM64) and **Mac (Apple Sili
 
 Download the latest version from [Releases](../../releases).
 
-**Windows**: run `Cutout-<version>.exe` on most PCs (Intel or AMD), or `Cutout-<version>-arm64.exe` on Windows on ARM (for example Snapdragon laptops). Not sure? Settings → System → About → System type says "x64-based" or "ARM-based". It installs for your user account only (no administrator rights needed) and adds Cutout to the Start menu, the desktop, and the "Open with" menu for images. Your default image viewer stays the same. The installer isn't code-signed yet, so Windows may show "Windows protected your PC": choose **More info → Run anyway**.
+**Windows**: run `Cutout-<version>.exe` on most PCs (Intel or AMD), or `Cutout-<version>-arm64.exe` on Windows on ARM (for example Snapdragon laptops). Not sure? Settings → System → About → System type says "x64-based" or "ARM-based". It installs for your user account only (no administrator rights needed) and adds Cutout to the Start menu, the desktop, and the "Open with" menu for images. Your default image viewer stays the same. From the release after 1.3.5, the installer is code-signed, so Windows shows who published it. A newly signed app can still get a "Windows protected your PC" warning for a while: choose **More info → Run anyway**. Versions up to 1.3.5 aren't signed and show that warning every time.
 
-**Mac (Apple Silicon)**: unzip `Cutout-<version>.zip` and move **Cutout.app** to Applications. The app isn't signed yet, so macOS says it "could not verify" Cutout the first time: click **Done**, then go to **System Settings → Privacy & Security**, click **Open Anyway** next to the Cutout message, and confirm. (Or run `xattr -dr com.apple.quarantine /Applications/Cutout.app` in Terminal.) You only need to do this once per version. Cutout appears in Finder's **Open With** menu for images; Preview stays the default.
+**Mac (Apple Silicon)**: unzip `Cutout-<version>.zip` and move **Cutout.app** to Applications. From the release after 1.3.5, the app is signed and notarized by Apple: the first time, macOS only asks whether to open an app downloaded from the Internet, so click **Open**. Versions up to 1.3.5 aren't signed: macOS says it "could not verify" Cutout, so click **Done**, then go to **System Settings → Privacy & Security**, click **Open Anyway** next to the Cutout message, and confirm (once per version). Cutout appears in Finder's **Open With** menu for images; Preview stays the default.
 
 **Web version**: use it at [app.cutout.design](https://app.cutout.design) (always the latest release), or open `cutout/index.html` from the source in Chrome or Edge. Everything works except reading the clipboard on its own (Ctrl+V still works), Open with, and the native save dialog.
 
@@ -51,9 +51,9 @@ Everything is explained in the **[user guide](docs/user-guide.md)**, including e
 
 ## Privacy
 
-Cutout works entirely on your computer. There's no account, no analytics, no update check, and nothing you open, paste or make is uploaded anywhere.
+Cutout works entirely on your computer. There's no account, no analytics, and nothing you open, paste or make is uploaded anywhere.
 
-The one time Cutout goes online is when you paste a normal Figma copy that contains images: the copy holds links to those images on Figma's servers, and Cutout downloads them to draw the paste, the same way Figma does. Nothing is sent with that request.
+Cutout goes online only twice. When you paste a normal Figma copy that contains images, the copy holds links to those images on Figma's servers, and Cutout downloads them to draw the paste, the same way Figma does. And the desktop app checks GitHub for a new version once a day (and when you choose Check for Updates). Nothing about you is sent with either request.
 
 Your settings (theme, tolerances and so on) stay on your computer. Dragging a layer out writes a temporary PNG file, which Cutout deletes again.
 

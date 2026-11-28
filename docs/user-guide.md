@@ -71,6 +71,7 @@ How images are placed:
 ## Moving around
 
 - **Pan**: scroll (two-finger scroll on a trackpad), Shift+scroll to pan sideways, hold **Space** and drag, or drag with the middle mouse button.
+- **Auto-scroll**: while you drag a marquee, move layers or drag a selection box around layers, bring the pointer to the edge of the canvas (or past it) and the view scrolls that way, faster the further out you go. Hold the pointer still and it keeps going until the artboard's edge comes into view.
 - **Zoom**: Ctrl+scroll or pinch, zooming toward the cursor. Or use Ctrl+= and Ctrl+−, the − and + buttons in the status bar, or Ctrl+0 to fit the artboard in the window (also the **Fit** button). Ctrl+1, or clicking the zoom percentage, goes to 100%.
 
 There's no Hand tool on purpose: Space and scrolling are always available, whatever tool you're using.
@@ -149,7 +150,7 @@ Selections stay inside the artboard, as in Fireworks: drag past an edge to selec
 
 ## Marquee tool (M)
 
-Drag to select a rectangle. The size shows in the options bar while you drag.
+Drag to select a rectangle. The size shows in the options bar while you drag. To select more than fits in the window, drag to the edge of the canvas: the view scrolls and the selection keeps growing.
 
 Selection shape (options bar):
 
@@ -170,7 +171,7 @@ Click a color to select it. Options bar:
 
 ### Cutting out a background
 
-![Pasting a product photo, selecting its background with the magic wand, deleting it and copying the result](images/cut-out-background.webp)
+![Pasting a product photo, selecting its background with the magic wand, deleting it and copying the result](images/cut-out-background.gif)
 
 1. Choose the Magic wand and click the background.
 2. Adjust the tolerance if needed (slider, or drag while clicking).
@@ -180,7 +181,7 @@ When the selection came from clicking a solid background color, Delete also clea
 
 ## Working with a pixel selection
 
-![Removing a notification from a screenshot: marquee around it, Shift+Backspace smart-fills it from its surroundings](images/remove-notification.webp)
+![Removing a notification from a screenshot: marquee around it, Shift+Backspace smart-fills it from its surroundings](images/remove-notification.gif)
 
 To remove something (a notification, a name, a logo), select it with a little margin and press **Shift+Backspace** (Smart fill). Cutout fills the selection from its surroundings, so the background, a gradient or a texture continues through. Check the result: if the selection cuts through other things, the fill can make up shapes that weren't there.
 
@@ -302,7 +303,7 @@ Open the **Cutout** menu (top-left):
 
 - **Theme**: System (follows your computer), Light or Dark. In the desktop app, the window's title bar follows it too.
 - **Check for Updates** (desktop app): asks GitHub right away whether a new version is out. On the Mac app it's in the menu bar instead (Cutout → Check for Updates).
-- **About Cutout**: the version you're running. On the Mac app it's in the menu bar instead (Cutout → About Cutout).
+- **About Cutout**: the version you're running, with links to the User Guide (this guide) and Cutout's privacy policy (cutout.design/privacy). On the Mac app, About is in the menu bar instead (Cutout → About Cutout), and both links are in the Help menu: User Guide and Privacy Policy.
 
 **Updates.** Once a day the desktop app checks GitHub for a new version. When there is one, it asks: **Download Update** downloads it in the background, **Later** asks again the next day, and **Skip This Version** stops asking about that version (Check for Updates still shows it). A message shows the download progress. Once downloaded, **Restart to Update** restarts Cutout with the new version (asking first if you have unsaved changes), or it installs the next time you quit. The check sends nothing about you or your images. The browser version is always the latest and never checks.
 
@@ -312,7 +313,7 @@ Cutout remembers its settings (theme, tolerances, eraser size, marquee shape, pr
 
 Cutout comes as a desktop app for Windows (x64 and ARM64, each with its own installer) and Mac (Apple Silicon), and runs as a web page in Chrome, Edge and other Chromium browsers at [app.cutout.design](https://app.cutout.design). Everything in this guide works in both, with these differences:
 
-| | Desktop app | Web version |
+| Feature | Desktop app | Web version |
 |---|---|---|
 | Ctrl+V paste | Yes | Yes |
 | Paste button, Paste menu items | Yes | No (browsers don't let pages read the clipboard on their own) |
@@ -328,7 +329,7 @@ The web version has also been lightly tested in Firefox and in WebKit, the engin
 
 On a Mac, Cutout updates itself only from the Applications folder. If you open it from somewhere else (such as Downloads), it asks once whether to move itself there. If you choose Do Not Move, drag Cutout to the Applications folder yourself before updating.
 
-On a Mac, the desktop app has a standard menu bar (Cutout, Edit, Window), and Cut, Copy, Paste, Undo and Select All work from it too.
+On a Mac, the desktop app has a standard menu bar (Cutout, Edit, Window, Help), and Cut, Copy, Paste, Undo and Select All work from it too. Help has User Guide (this guide) and Privacy Policy.
 
 ## Keyboard shortcuts
 

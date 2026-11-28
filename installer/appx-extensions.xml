@@ -1,0 +1,18 @@
+        <!-- Cutout in "Open with" for images, as installer/installer.nsh does for the NSIS install.
+             An MSIX package can't make itself the default app: Windows only lets the user choose
+             that, so Photos (or whatever the user picked) stays the default. electron-builder inserts
+             this inside <Extensions> of the Store package
+             (build.appx.customExtensionsPath). One group, so Windows lists Cutout once per type. -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="cutout.image">
+            <uap:DisplayName>Image</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType ContentType="image/png">.png</uap:FileType>
+              <uap:FileType ContentType="image/jpeg">.jpg</uap:FileType>
+              <uap:FileType ContentType="image/jpeg">.jpeg</uap:FileType>
+              <uap:FileType ContentType="image/gif">.gif</uap:FileType>
+              <uap:FileType ContentType="image/webp">.webp</uap:FileType>
+              <uap:FileType ContentType="image/svg+xml">.svg</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>

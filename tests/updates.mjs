@@ -84,7 +84,9 @@ export default async function updateTests({ electron, here, wait }) {
     check('Check for Updates in the Cutout menu shows the skipped version', again, await openDialog());
 
     // 4. Later just closes it
-    await press('Later'); await wait(200);
+    // 1.5 s: with only 200 ms, the next step's Check for Updates dialog opened and vanished again
+    // (seen after main's accessibility and store changes were merged in; a person can't click that fast)
+    await press('Later'); await wait(1500);
     check('Later closes the dialog', !(await openDialog()));
 
     // 5. Download Update → "ready" dialog (Windows; the Mac needs a signed app, Linux has no updater)
