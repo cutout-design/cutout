@@ -13,6 +13,7 @@
     "version": "node scripts/sync-version.js && git add cutout/version.js",
     "dist": "electron-builder --win --x64",
     "dist:arm64": "electron-builder --win --arm64 -c.nsis.artifactName=Cutout-${version}-arm64.${ext}",
+    "dist:store": "electron-builder --win appx --x64 --arm64",
     "dist:mac": "electron-builder --mac --arm64"
   },
   "build": {
@@ -32,6 +33,21 @@
       "target": "nsis",
       "icon": "cutout/icons/icon.ico",
       "executableName": "Cutout"
+    },
+    "appx": {
+      "identityName": "ggolcher.CutoutImageEditor",
+      "publisher": "CN=5802E7E3-3744-4D6F-AAC6-4C9D807D1900",
+      "publisherDisplayName": "ggolcher",
+      "applicationId": "Cutout",
+      "displayName": "Cutout Image Editor",
+      "backgroundColor": "transparent",
+      "languages": [
+        "en-US"
+      ],
+      "minVersion": "10.0.17763.0",
+      "maxVersionTested": "10.0.26100.0",
+      "customExtensionsPath": "installer/appx-extensions.xml",
+      "artifactName": "Cutout-${version}-${arch}.${ext}"
     },
     "mac": {
       "target": [

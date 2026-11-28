@@ -15,7 +15,7 @@ const PAGE_SUITES = [ // file → the function it defines; saveTests first (it e
   ['save-tests.js', 'saveTests'], ['app-tests.js', 'appTests'], ['clip-tests.js', 'clipTests'],
   ['shrink-tests.js', 'shrinkTests'], ['scan-tests.js', 'scanTests'], ['fill-tests.js', 'fillTests'],
   ['seam-tests.js', 'seamTests'], ['layer-sel-tests.js', 'layerSelTests'], ['review-tests.js', 'reviewTests'],
-  ['more-tests.js', 'moreTests'],
+  ['more-tests.js', 'moreTests'], ['autoscroll-tests.js', 'autoScrollTests'],
 ];
 const only = process.argv.slice(2);
 const wanted = name => !only.length || only.some(o => name.toLowerCase().includes(o.toLowerCase()));
