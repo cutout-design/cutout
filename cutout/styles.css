@@ -7,9 +7,13 @@
   --muted: #737373;
   --hover: #f0f0f0;
   --pressed: #e4e4e4;
-  --accent: #0d99ff;
+  /* --accent: fills with white text (Save, dialog buttons, menu highlight, active tool): 4.6:1.
+     --accent-line: blue lines, rings, checkmarks and the canvas handles; lighter in dark mode, where
+     #0073e7 is too dark to see on the panels. */
+  --accent: #0073e7;
   --accent-text: #ffffff;
-  --accent-soft: #e5f4ff;
+  --accent-line: #0073e7;
+  --accent-soft: #e6f0fd;
   --stage: #e6e6e6;
   --stage-dim: rgba(230, 230, 230, 0.8);
   --artboard-edge: rgba(0, 0, 0, 0.14);
@@ -31,7 +35,8 @@
   --muted: #9a9a9a;
   --hover: #363636;
   --pressed: #424242;
-  --accent-soft: rgba(13, 153, 255, 0.2);
+  --accent-line: #6cb4ff;
+  --accent-soft: rgba(108, 180, 255, 0.18);
   --stage: #181818;
   --stage-dim: rgba(24, 24, 24, 0.8);
   --artboard-edge: rgba(255, 255, 255, 0.14);
@@ -92,7 +97,7 @@ input[type="number"], input[type="text"] {
   width: 64px;
   user-select: text;
 }
-input[type="number"]:focus, input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+input[type="number"]:focus, input[type="text"]:focus { outline: 2px solid var(--accent-line); outline-offset: -1px; border-color: transparent; }
 select {
   font: inherit;
   color: inherit;
@@ -102,7 +107,7 @@ select {
   height: 24px;
   padding: 0 4px;
 }
-input[type="range"] { width: 110px; accent-color: var(--accent); vertical-align: middle; }
+input[type="range"] { width: 110px; accent-color: var(--accent-line); vertical-align: middle; }
 /* Own checkboxes/radios — Edge's built-in Windows-style ones render heavy and dark in light mode. */
 input[type="checkbox"], input[type="radio"] {
   appearance: none;
@@ -117,14 +122,14 @@ input[type="checkbox"], input[type="radio"] {
   transition: background-color 0.1s, border-color 0.1s;
 }
 input[type="radio"] { border-radius: 50%; }
-input[type="checkbox"]:hover, input[type="radio"]:hover { border-color: var(--accent); }
+input[type="checkbox"]:hover, input[type="radio"]:hover { border-color: var(--accent-line); }
 input[type="checkbox"]:checked {
   background-color: var(--accent);
   border-color: var(--accent);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3 4.9 8.6 9.4 3.8' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
-input[type="radio"]:checked { border: 4.5px solid var(--accent); background: #fff; }
-input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type="radio"]:checked { border: 4.5px solid var(--accent-line); background: #fff; }
+input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outline: 2px solid var(--accent-line); outline-offset: 2px; }
 label { display: inline-flex; align-items: center; gap: 6px; }
 .label, .muted { color: var(--muted); }
 kbd {
@@ -147,7 +152,7 @@ kbd {
 }
 .brand { font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 3px; padding: 0 6px 0 8px; margin-right: 4px; }
 .brand svg { width: 14px; height: 14px; color: var(--muted); }
-.menu-item .check { width: 16px; display: inline-block; color: var(--accent); }
+.menu-item .check { width: 16px; display: inline-block; color: var(--accent-line); }
 .menu-heading { padding: 6px 10px 4px; color: var(--muted); font-size: 11px; }
 .group { display: flex; align-items: center; gap: 2px; }
 .group .label { padding: 0 4px 0 2px; }
@@ -198,10 +203,10 @@ label.check input { margin: 0; }
 /* Segmented control (selection mode). */
 .seg { display: inline-flex; gap: 1px; padding: 1px; border: 1px solid var(--border); border-radius: 6px; }
 .optionsbar .seg button { width: 28px; height: 22px; padding: 0; display: grid; place-items: center; border-radius: 4px; color: var(--muted); }
-.optionsbar .seg button.on { background: var(--accent-soft); color: var(--accent); }
+.optionsbar .seg button.on { background: var(--accent-soft); color: var(--accent-line); }
 .seg svg { width: 15px; height: 15px; stroke-width: 1.2; }
 .lock { color: var(--muted); }
-.lock.on { color: var(--accent); background: var(--accent-soft); }
+.lock.on { color: var(--accent-line); background: var(--accent-soft); }
 .more { display: inline-flex; align-items: center; gap: 2px; }
 .more svg { width: 14px; height: 14px; }
 .optionsbar[data-active-tool="bucket"] .fill-group .swatch,
@@ -264,7 +269,7 @@ label.check input { margin: 0; }
   content: "";
   position: absolute;
   inset: 8px;
-  border: 2px dashed var(--accent);
+  border: 2px dashed var(--accent-line);
   border-radius: 10px;
   pointer-events: none;
 }
@@ -299,10 +304,10 @@ label.check input { margin: 0; }
 }
 .layer:hover { background: var(--hover); }
 .layer.selected { background: var(--accent-soft); }
-.layer.active { border-color: var(--accent); }
+.layer.active { border-color: var(--accent-line); }
 .layer.off .thumb, .layer.off .name { opacity: 0.4; }
-.layer.drop-above { box-shadow: inset 0 2px 0 var(--accent); }
-.layer.drop-below { box-shadow: inset 0 -2px 0 var(--accent); }
+.layer.drop-above { box-shadow: inset 0 2px 0 var(--accent-line); }
+.layer.drop-below { box-shadow: inset 0 -2px 0 var(--accent-line); }
 .layer .thumb { width: 30px; height: 30px; border-radius: 3px; border: 1px solid var(--border); flex: none; }
 .layer .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .layer .name input { width: 100%; }
@@ -406,11 +411,11 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.25); }
 /* ---------- accessibility */
 /* Keyboard focus is always visible (mouse clicks don't show it; buttons don't take focus on click) */
 button:focus-visible, select:focus-visible, input[type="range"]:focus-visible, .layer:focus-visible, #view:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-line);
   outline-offset: 1px;
 }
 #view:focus-visible { outline-offset: -2px; }
-.swatch:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+.swatch:focus-within { outline: 2px solid var(--accent-line); outline-offset: 1px; }
 .menu-item:focus-visible { outline: none; background: var(--accent); color: var(--accent-text); }
 .menu-item:focus-visible .menu-key { color: var(--accent-text); }
 .layer .eye:focus-visible, .layer:focus-within .eye { opacity: 1; }
