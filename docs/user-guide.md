@@ -171,7 +171,7 @@ Click a color to select it. Options bar:
 
 ### Cutting out a background
 
-![Pasting a product photo, selecting its background with the magic wand, deleting it and copying the result](images/cut-out-background.gif)
+![Pasting three phone screens, removing their background with the magic wand, cutting each phone to its own layer, aligning and spacing them, and copying the result](images/cut-out-background.gif)
 
 1. Choose the Magic wand and click the background.
 2. Adjust the tolerance if needed (slider, or drag while clicking).

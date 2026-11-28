@@ -8,16 +8,16 @@ A lightweight raster scratchpad for designers.
 
 Cutout handles the quick bitmap fixes that come up while designing in Figma: cut out a background, pull part of an image onto its own layer, fill, erase, scale, line things up, then copy the result back to Figma or save it as PNG or JPEG. It works like Fireworks and Sketch (select things directly, move them directly) and stays deliberately small: no project files, no Photoshop-style complexity. Paste, fix, copy back.
 
-Cut out a product photo: paste it, click the background with the magic wand, press Delete, copy it back.
+Cut out and line up app screens: paste them, click the background with the magic wand, press Delete, cut each phone to its own layer, align and space them, and copy them back.
 
-![Pasting a product photo, selecting its background with the magic wand, deleting it and copying the result](docs/images/cut-out-background.gif)
+![Pasting three phone screens, removing their background with the magic wand, cutting each phone to its own layer, aligning and spacing them, and copying the result](docs/images/cut-out-background.gif)
 
 Remove a notification from a screenshot: draw a marquee around it, Smart fill it (Shift+Backspace), copy it back.
 
 ![Pasting an app screenshot, selecting a notification with the marquee, smart-filling it from its surroundings and copying the result](docs/images/remove-notification.gif)
 
 <p>
-<img src="docs/images/window-light.png" alt="The Cutout window in the light theme, with the magic wand selecting the background around a bottle" width="49%">
+<img src="docs/images/window-light.png" alt="The Cutout window in the light theme, with the magic wand selecting the background around three phone screens" width="49%">
 <img src="docs/images/window-dark.png" alt="The same window in the dark theme" width="49%">
 </p>
 
