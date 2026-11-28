@@ -2842,7 +2842,7 @@
     ], r.left, r.bottom + 4, kb);
   });
 
-  /** About: the icon, the name, the version, then Help (the user guide) and Privacy Policy links (app stores
+  /** About: the icon, the name, the version, then User Guide and Privacy Policy links (app stores
    *  ask for a privacy link in the app). The Mac app uses the system's About window instead, so it has both
    *  in its Help menu. */
   async function openAbout() {
