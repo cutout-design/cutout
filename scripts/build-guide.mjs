@@ -167,14 +167,14 @@ console.log(`guide: ${toc.length} sections, ${used.size} headings -> ${path.join
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cutout privacy</title>
+<title>Cutout Privacy Policy</title>
 <meta name="description" content="${desc}">
 <link rel="icon" type="image/png" sizes="32x32" href="../images/icon-32.png">
 <link rel="canonical" href="https://cutout.design/privacy/">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="Cutout">
 <meta property="og:url" content="https://cutout.design/privacy/">
-<meta property="og:title" content="Cutout privacy">
+<meta property="og:title" content="Cutout Privacy Policy">
 <meta property="og:description" content="${desc}">
 <meta property="og:image" content="https://cutout.design/images/share.png">
 <meta property="og:image:width" content="1200">
