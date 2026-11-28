@@ -4,3 +4,6 @@ out/
 *.lnk
 CLAUDE.local.md
 *.provisionprofile
+
+# Drawn on the Mac build machine by scripts/make-dmg-background.js
+installer/dmg-background*.png
