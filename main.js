@@ -232,8 +232,9 @@ app.on('will-quit', () => {
 
 /* ---------- updates (electron-updater, from this repository's GitHub Releases) */
 // Once a day (at launch, and every 24 hours while Cutout stays open) Cutout asks GitHub whether a newer
-// release is out. The requests carry nothing about the user or the computer: user agent "Cutout", no
-// version, no ID, no language, no cookies (electron-updater has a session of its own). The page shows the dialogs:
+// release is out. The check carries nothing about the user or the computer: user agent "Cutout", no
+// version, no ID, no language, no cookies (electron-updater has a session of its own). Downloading an update
+// first fetches the installed version's .blockmap (named after it) for a differential download; docs/privacy.md says so. The page shows the dialogs:
 // "available" (Download Update / Later / Skip This Version), then "ready" (Restart to Update / Later;
 // otherwise the update installs when Cutout quits). Off when running from source, except in tests, and in the
 // Microsoft Store and Mac App Store versions: the store updates those (process.windowsStore / process.mas).

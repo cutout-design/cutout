@@ -16,7 +16,7 @@ When you paste a normal Figma copy that contains images, the copy holds links to
 
 ## Update check
 
-The desktop app downloaded from GitHub checks for a new version once a day, and when you choose Check for Updates. It reads the list of releases from GitHub, and downloads an update only when you choose Download Update. The request carries no version, no ID, no language, and no cookies. GitHub sees it like any web request (your IP address and the time), under GitHub's privacy statement. The browser version never checks: it is always the latest.
+The desktop app downloaded from GitHub checks for a new version once a day, and when you choose Check for Updates. It reads the list of releases from GitHub, and downloads an update only when you choose Download Update. The check carries no version, no ID, no language, and no cookies. Downloading an update fetches files named after the new version and, the first time, after the version you have installed (to download only the parts that changed). GitHub sees it like any web request (your IP address and the time), under GitHub's privacy statement. The browser version never checks: it is always the latest.
 
 The Figma images and the update check are the only times the app goes online.
 
@@ -36,10 +36,9 @@ The site uses no cookies and no analytics. If you switch between light and dark,
 
 The browser version is a set of files your browser downloads from GitHub Pages. After that, it works like the desktop app: your images stay in your browser and are never uploaded.
 
-## Downloads and donations
+## Downloads
 
-- **Downloads** come from GitHub Releases, under GitHub's privacy statement.
-- **Donations**, if you choose to give one, go through GitHub Sponsors, with payments handled by Stripe, under their own policies. GitHub shows us your GitHub user name and sponsorship (a private sponsorship hides them only from others), and your email address only if you choose to share it.
+Downloads come from GitHub Releases, under GitHub's privacy statement.
 
 Windows and macOS may send crash reports to Microsoft or Apple if you have that turned on in their settings. Cutout itself sends none.
 

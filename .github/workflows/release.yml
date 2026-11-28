@@ -62,6 +62,13 @@ jobs:
           if [ -z "$x" ]; then echo "No Xcode 26 or newer on this runner"; ls -d /Applications/Xcode*.app; exit 1; fi
           sudo xcode-select -s "$x"
           xcrun actool --version | head -5
+      # A release must never ship an unsigned Mac app (its latest-mac.yml would point installed copies at it):
+      # on a version tag, the Mac build stops here if the signing secret is missing.
+      - name: Mac signing secret present (version tags)
+        if: matrix.name == 'mac-arm64' && startsWith(github.ref, 'refs/tags/v') && env.MAC_SIGN != 'true'
+        run: |
+          echo "MAC_CERT_P12_BASE64 is missing: a release would ship an unsigned Mac app" >&2
+          exit 1
       - run: npm ci
       - name: Build
         if: env.MAC_SIGN != 'true' && (runner.os != 'Windows' || !(startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'))

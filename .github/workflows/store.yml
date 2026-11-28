@@ -1,18 +1,18 @@
 # Builds the Microsoft Store packages (x64 and ARM64 .appx) for an existing release tag, by hand
-# (Actions tab → Store packages → Run workflow → tag, e.g. v1.3.6). Kept apart from release.yml so
+# (Actions tab → Store packages → Run workflow → tag, e.g. v2.0.0). Kept apart from release.yml so
 # the GitHub Release keeps exactly its files: an unsigned .appx can't be installed by users anyway,
 # and it only makes sense uploaded to Partner Center.
 #
 # Download the "cutout-store-<tag>" artifact from the run page and upload both .appx files to the
 # Store submission's Packages page (one submission takes both architectures). Microsoft signs them
-# after certification. Works for tags whose package.json has the "appx" section (1.3.6 and later).
+# after certification. Works for tags whose package.json has the "appx" section (2.0.0 and later).
 name: Store packages
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to build (for example v1.3.6)
+        description: Release tag to build (for example v2.0.0)
         required: true
 
 permissions:
