@@ -171,7 +171,7 @@ Click a color to select it. Options bar:
 
 ### Cutting out a background
 
-![Pasting a product photo, selecting its background with the magic wand, deleting it and copying the result](images/cut-out-background.webp)
+![Pasting a product photo, selecting its background with the magic wand, deleting it and copying the result](images/cut-out-background.gif)
 
 1. Choose the Magic wand and click the background.
 2. Adjust the tolerance if needed (slider, or drag while clicking).
@@ -181,7 +181,7 @@ When the selection came from clicking a solid background color, Delete also clea
 
 ## Working with a pixel selection
 
-![Removing a notification from a screenshot: marquee around it, Shift+Backspace smart-fills it from its surroundings](images/remove-notification.webp)
+![Removing a notification from a screenshot: marquee around it, Shift+Backspace smart-fills it from its surroundings](images/remove-notification.gif)
 
 To remove something (a notification, a name, a logo), select it with a little margin and press **Shift+Backspace** (Smart fill). Cutout fills the selection from its surroundings, so the background, a gradient or a texture continues through. Check the result: if the selection cuts through other things, the fill can make up shapes that weren't there.
 
@@ -310,7 +310,7 @@ Cutout remembers its settings (theme, tolerances, eraser size, marquee shape, pr
 
 Cutout comes as a desktop app for Windows (x64 and ARM64, each with its own installer) and Mac (Apple Silicon), and runs as a web page in Chrome, Edge and other Chromium browsers at [app.cutout.design](https://app.cutout.design). Everything in this guide works in both, with these differences:
 
-| | Desktop app | Web version |
+| Feature | Desktop app | Web version |
 |---|---|---|
 | Ctrl+V paste | Yes | Yes |
 | Paste button, Paste menu items | Yes | No (browsers don't let pages read the clipboard on their own) |

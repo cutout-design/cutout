@@ -10,6 +10,8 @@ What's new in each version of Cutout. The section for a version becomes its rele
 - Mac: the app is signed and notarized by Apple, so it opens after the usual "downloaded from the Internet" question, without a trip to Privacy & Security.
 - Pasting SVG markup (Figma's Copy as SVG) is safer: Cutout reads the size straight from the SVG and lets the browser draw it as an image, without loading the markup as a document. SVG that declares entities is refused, and text made to look like many comments before an SVG can no longer freeze the window.
 - Each release now lists SHA-256 checksums of its files, and each file comes with build provenance, a signed record that it was built from this repository. SECURITY.md explains how to check a download.
+- New blue: buttons, menus and the app icon use a deeper blue (#0073E7) so white text on it is easy to read; in dark mode, outlines, focus rings and checkmarks use a lighter blue that stands out on the dark panels.
+- Screen readers: the canvas is the window's main region and the options bar is its own region, so both can be jumped to; every field has a spoken name (marquee width and height, fill choices, eraser size, the Canvas size background color). Nothing changes on screen.
 
 ## 1.3.5 (2026-11-26)
 

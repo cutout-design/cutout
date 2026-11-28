@@ -37,6 +37,8 @@ const docStyle = `  .doc { max-width: 72ch; }
   .doc h2 { font-size: 26px; letter-spacing: -.01em; margin: 56px 0 14px; scroll-margin-top: 88px; }
   .doc h3 { font-size: 19px; margin: 32px 0 10px; scroll-margin-top: 88px; }
   .doc p, .doc li { color: var(--text); }
+  .doc a { text-decoration: underline; text-decoration-thickness: 1px; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); }
+  .doc a:hover { text-decoration-color: currentColor; }
   .doc ul, .doc ol { padding-left: 22px; }
   .doc li { margin: 4px 0; }`;
 const preTheme = between(site, '<script>try {', '</script>');
@@ -49,8 +51,12 @@ const slug = text => {
   return n ? `${base}-${n}` : base;
 };
 // Images: copy the ones the guide uses next to the page; use the dark versions where there are some
-const darkOf = { 'window-light.png': 'window-dark.png', 'cut-out-background.webp': 'cut-out-background-dark.webp' };
-const imgSrc = name => (fs.existsSync(path.join(docs, 'images', name)) ? path.join(docs, 'images', name) : path.join(root, 'site/images', name));
+const darkOf = { 'window-light.png': 'window-dark.png' };
+const darkVideo = { 'cut-out-background': 'cut-out-background-dark' };
+// Looked up in the release's docs, then this checkout's docs and site images (files added since the release)
+const imgSrc = name => [path.join(docs, 'images', name), path.join(root, 'docs/images', name), path.join(root, 'site/images', name)].find(f => fs.existsSync(f)) || path.join(root, 'site/images', name);
+const copyImg = name => fs.copyFileSync(imgSrc(name), path.join(out, 'guide/images', name));
+let animId = 0;
 fs.mkdirSync(path.join(out, 'guide/images'), { recursive: true });
 const toc = [];
 const marked = new Marked({ gfm: true });
@@ -63,6 +69,16 @@ marked.use({
     },
     image({ href, text }) {
       const name = path.basename(href);
+      // An animation (GIF on GitHub, or WebP in older releases) with a video version (name.mp4) becomes
+      // the site's pausable video, as on the home page
+      const vid = name.replace(/.(gif|webp)$/, ''), darkVid = darkVideo[vid];
+      if (/.(gif|webp)$/.test(name) && fs.existsSync(imgSrc(vid + '.mp4'))) {
+        for (const b of [vid, darkVid].filter(Boolean)) for (const f of ['.mp4', '-start.webp', '-end.webp']) copyImg(b + f);
+        const id = 'anim' + ++animId, alt = text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        return `<div class="doc-anim"><div class="anim" role="button" tabindex="0" aria-label="Pause animation" aria-describedby="${id}">` +
+          `<video src="images/${vid}.mp4" poster="images/${vid}-start.webp" data-light="images/${vid}" data-dark="images/${darkVid || vid}" width="1280" height="800" muted loop playsinline preload="metadata"></video>` +
+          `<span class="anim-ic" aria-hidden="true"></span><span class="sr-only" id="${id}">${alt}</span></div></div>`;
+      }
       fs.copyFileSync(imgSrc(name), path.join(out, 'guide/images', name));
       const dark = darkOf[name];
       if (dark) fs.copyFileSync(imgSrc(dark), path.join(out, 'guide/images', dark));
@@ -103,9 +119,10 @@ ${style.replace('</style>', `
   .guide nav.toc ol { list-style: none; margin: 0; padding: 0; }
   .guide nav.toc a { display: block; padding: 4px 0; color: var(--muted); }
   .guide nav.toc a:hover { color: var(--text); text-decoration: none; }
-  .guide nav.toc a.here { color: var(--accent); }
+  .guide nav.toc a.here { color: var(--link); }
 ${docStyle}
-  .doc img { border-radius: 12px; border: 1px solid var(--line); box-shadow: var(--shadow); margin: 8px 0; }
+  .doc img, .doc .doc-anim { border-radius: 12px; border: 1px solid var(--line); box-shadow: var(--shadow); margin: 8px 0; }
+  .doc .doc-anim { overflow: hidden; }
   .doc code { font: 13.5px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace; background: var(--bg-soft); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; }
   .doc table { border-collapse: collapse; width: 100%; margin: 12px 0 20px; font-size: 15px; }
   .doc th, .doc td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }

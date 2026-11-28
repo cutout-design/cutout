@@ -20,6 +20,7 @@
 <body>
 <div id="app">
   <header class="topbar">
+    <h1 class="sr-only">Cutout</h1>
     <button class="brand" id="appMenu" title="Cutout menu" aria-haspopup="menu" aria-expanded="false">Cutout
       <svg viewBox="0 0 16 16"><path d="m4.5 6.5 3.5 3.5 3.5-3.5"/></svg>
     </button>
@@ -41,7 +42,7 @@
     </div>
   </header>
 
-  <div class="optionsbar">
+  <div class="optionsbar" role="region" aria-label="Options">
     <!-- Order: the current tool's settings first, then whatever is selected (artboard / layer / pixels).
          Each .opt is one context; .grp = a cluster of related controls; .vsep = a divider between clusters. -->
 
@@ -62,16 +63,16 @@
 
     <div class="opt" data-for="marquee">
       <div class="grp">
-        <select id="mqStyle" title="Selection shape">
+        <select id="mqStyle" title="Selection shape" aria-label="Selection shape">
           <option value="normal">Free</option>
           <option value="ratio">Aspect ratio</option>
           <option value="size">Exact size</option>
         </select>
       </div>
       <div class="grp" id="mqDims">
-        <input type="text" inputmode="decimal" class="num" id="mqW" title="Width">
+        <input type="text" inputmode="decimal" class="num" id="mqW" title="Width" aria-label="Width">
         <span class="label" id="mqSep">×</span>
-        <input type="text" inputmode="decimal" class="num" id="mqH" title="Height">
+        <input type="text" inputmode="decimal" class="num" id="mqH" title="Height" aria-label="Height">
         <span class="label" id="mqUnit">px</span>
       </div>
     </div>
@@ -100,7 +101,7 @@
     <div class="opt" data-for="bucket">
       <div class="grp">
         <span class="label">Fill</span>
-        <select id="bucketFill" title="Fill with"><option value="color">Color</option><option value="smart">Smart</option></select>
+        <select id="bucketFill" title="Fill with" aria-label="Fill with"><option value="color">Color</option><option value="smart">Smart</option></select>
         <label class="swatch bucket-swatch" title="Fill color (I)"><input type="color" class="fill-color" aria-label="Fill color"></label>
       </div>
       <div class="vsep"></div>
@@ -117,7 +118,7 @@
       <div class="grp">
         <span class="label">Size</span>
         <input type="range" id="eraserSize" min="1" max="300" aria-label="Eraser size">
-        <input type="text" inputmode="numeric" class="num narrow" id="eraserSizeNum" title="Brush size ([ and ] to change)">
+        <input type="text" inputmode="numeric" class="num narrow" id="eraserSizeNum" title="Brush size ([ and ] to change)" aria-label="Eraser size in pixels">
         <span class="label">px</span>
       </div>
     </div>
@@ -194,7 +195,7 @@
       </div>
       <div class="vsep"></div>
       <div class="grp fill-group">
-        <select id="selFill" title="Fill with"><option value="color">Color</option><option value="smart">Smart</option></select>
+        <select id="selFill" title="Fill with" aria-label="Fill with"><option value="color">Color</option><option value="smart">Smart</option></select>
         <label class="swatch small sel-swatch" title="Fill color (I)"><input type="color" class="fill-color" aria-label="Fill color"></label>
         <button data-cmd="fillSel" id="btnFill" title="Fill (Alt+Backspace)">Fill</button>
       </div>
@@ -215,10 +216,10 @@
       <button data-tool="eraser" title="Eraser (E)"><svg viewBox="0 0 24 24"><path d="M8 19.5 4.3 15.8a1.5 1.5 0 0 1 0-2.1l9.4-9.4a1.5 1.5 0 0 1 2.1 0l4.4 4.4a1.5 1.5 0 0 1 0 2.1L12 19.5zM9.5 8.5l6 6M12 19.5h8"/></svg></button>
     </nav>
 
-    <div class="stage" id="stage">
+    <main class="stage" id="stage">
       <!-- Focusable so the Menu key (or Shift+F10) opens the right-click menu from the keyboard -->
       <canvas id="view" tabindex="0" aria-label="Canvas. Use the Menu key for commands."></canvas>
-    </div>
+    </main>
 
     <aside class="panel" aria-label="Layers panel">
       <div class="panel-head">
@@ -255,7 +256,7 @@
     </div>
     <div class="row">
       <label class="check"><input type="checkbox" id="cbgTransparent"> Transparent background</label>
-      <input type="color" id="cbg" value="#ffffff" title="Background color">
+      <input type="color" id="cbg" value="#ffffff" title="Background color" aria-label="Background color">
     </div>
     <div class="actions">
       <button value="ok" class="primary">Apply</button>
