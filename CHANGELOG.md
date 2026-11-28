@@ -8,6 +8,7 @@ What's new in each version of Cutout. The section for a version becomes its rele
 - Mac: Download Update outside the Applications folder offers to move Cutout there, instead of only saying so.
 - Mac: Do Not Move is remembered only for that copy of Cutout. Before, the answer stayed even after deleting Cutout and downloading it again.
 - Check for Updates by hand no longer counts as the daily check, so the next launch still checks on its own.
+- Shrink to content keeps small text and faint card borders in UI screenshots. Before, it could cut off a row of cards at their icons, or drop a title, when a big banner was nearby.
 
 ## 2.0.1 (2026-11-27)
 
