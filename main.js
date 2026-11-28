@@ -250,6 +250,8 @@ function buildMacMenu() {
       role: 'help', // macOS adds its menu search field here
       submenu: [
         { label: 'Cutout Help', click: () => shell.openExternal('https://cutout.design/guide/') },
+        // The system's About window can't hold a link, so the Mac app has Privacy here
+        // (Windows and the browser: a link in Cutout's About box). App stores ask for one in the app.
         { label: 'Privacy', click: () => shell.openExternal('https://cutout.design/privacy/') },
       ],
     },

@@ -143,16 +143,15 @@ window.moreTests = async () => {
     // The old check doubled its time with each comment: 40 of them froze the window for hours
     r = await pasteSvg('<!---->'.repeat(40) + 'x</svg>');
     check('SVG paste: crafted comment text is checked quickly', !r.layer && r.ms < 200, `${Math.round(r.ms)} ms`);
-    // Cutout menu → Privacy opens the privacy page (app stores ask for a link in the app)
-    const open = window.open; let opened = null;
-    window.open = url => { opened = url; return null; };
-    try {
-      $('#appMenu').click(); await wait(30);
-      const item = [...document.querySelectorAll('#menu .menu-item')].find(b => b.getAttribute('aria-label') === 'Privacy');
-      if (item) item.click();
-      await wait(30);
-    } finally { window.open = open; }
-    check('Cutout menu: Privacy opens the privacy page', opened === 'https://cutout.design/privacy/', String(opened));
+    // About Cutout links to the privacy page (app stores ask for a link in the app); OK has the focus
+    $('#appMenu').click(); await wait(30);
+    const about = [...document.querySelectorAll('#menu .menu-item')].find(b => b.getAttribute('aria-label') === 'About Cutout');
+    if (about) about.click();
+    await wait(100);
+    const link = $('#aboutPrivacy');
+    check('About: links to the privacy page, opening outside the app', $('#dlgAbout').open && link && link.href === 'https://cutout.design/privacy/' && link.target === '_blank', link && link.href);
+    check('About: OK has the focus, so Enter closes it', document.activeElement === $('#dlgAbout button[value="ok"]'), document.activeElement && document.activeElement.outerHTML.slice(0, 60));
+    $('#dlgAbout').close();
   } catch (e) {
     check('the suite ran to the end', false, e.message);
   } finally {

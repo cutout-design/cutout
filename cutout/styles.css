@@ -345,6 +345,8 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.25); }
 .dlg.about { justify-items: center; text-align: center; gap: 6px; min-width: 240px; padding: 24px 24px 18px; }
 .dlg.about h2 { font-size: 16px; margin-top: 6px; }
 .dlg.about .actions { margin-top: 12px; }
+.dlg.about a { color: var(--accent); text-decoration: none; }
+.dlg.about a:hover { text-decoration: underline; }
 .actions { display: flex; flex-direction: row-reverse; gap: 8px; }
 .actions button { border-color: var(--border); min-width: 76px; }
 .actions button.primary { border-color: transparent; }

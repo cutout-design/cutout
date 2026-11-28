@@ -302,8 +302,7 @@ Every number field (sizes, positions, tolerance, spacing, dialogs) accepts math,
 Open the **Cutout** menu (top-left):
 
 - **Theme**: System (follows your computer), Light or Dark. In the desktop app, the window's title bar follows it too.
-- **About Cutout**: the version you're running. On the Mac app it's in the menu bar instead (Cutout → About Cutout).
-- **Privacy**: opens Cutout's privacy page (cutout.design/privacy) in your browser. On the Mac app it's in the menu bar instead (Help → Privacy).
+- **About Cutout**: the version you're running, and a link to Cutout's privacy page (cutout.design/privacy). On the Mac app, About is in the menu bar instead (Cutout → About Cutout), and the privacy page is under Help → Privacy.
 
 Cutout remembers its settings (theme, tolerances, eraser size, marquee shape, proportion locks and so on) between sessions.
 

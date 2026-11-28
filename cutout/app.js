@@ -2837,15 +2837,13 @@
       { label: 'System', checked: t === 'system', run: () => setTheme('system') },
       { label: 'Light', checked: t === 'light', run: () => setTheme('light') },
       { label: 'Dark', checked: t === 'dark', run: () => setTheme('dark') },
-      // On the Mac app, About and Privacy are in the menu bar (Cutout → About Cutout, Help → Privacy).
-      // Privacy: the privacy page (app stores ask for a link in the app); Electron opens it in the browser.
-      ...(IS_MAC && Platform.isNative ? [] : ['-',
-        { label: 'About Cutout', run: openAbout },
-        { label: 'Privacy', run: () => window.open('https://cutout.design/privacy/', '_blank', 'noopener') }]),
+      // On the Mac app, About is in the menu bar (Cutout → About Cutout)
+      ...(IS_MAC && Platform.isNative ? [] : ['-', { label: 'About Cutout', run: openAbout }]),
     ], r.left, r.bottom + 4, kb);
   });
 
-  /** About: the icon, the name and the version (as on the Mac's About window). */
+  /** About: the icon, the name, the version and a Privacy link (the privacy page; app stores ask for a
+   *  link in the app). The Mac app uses the system's About window instead, so it has Help → Privacy. */
   async function openAbout() {
     const v = await Platform.version();
     $('#aboutVersion').textContent = v ? `Version ${v}` : 'Web version';
