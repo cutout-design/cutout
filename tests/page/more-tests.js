@@ -150,6 +150,8 @@ window.moreTests = async () => {
     await wait(100);
     const link = $('#aboutPrivacy');
     check('About: links to the privacy page, opening outside the app', $('#dlgAbout').open && link && link.href === 'https://cutout.design/privacy/' && link.target === '_blank', link && link.href);
+    const guide = $('#aboutGuide');
+    check('About: User Guide links to the guide, on the line under the version', guide && guide.textContent === 'User Guide' && guide.href === 'https://cutout.design/guide/' && guide.target === '_blank' && guide.parentElement === link.parentElement && guide.parentElement !== $('#aboutVersion'), guide && guide.href);
     check('About: OK has the focus, so Enter closes it', document.activeElement === $('#dlgAbout button[value="ok"]'), document.activeElement && document.activeElement.outerHTML.slice(0, 60));
     $('#dlgAbout').close();
   } catch (e) {
