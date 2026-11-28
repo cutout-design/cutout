@@ -2,6 +2,13 @@
 
 What's new in each version of Cutout. The section for a version becomes its release notes on GitHub.
 
+## 2.0.2 (2026-11-27)
+
+- Mac: Move to Applications now works with updates. Before, the moved copy kept the "downloaded from the Internet" flag, so macOS ran it from a hidden copy and Download Update asked to move Cutout to the Applications folder although it was there. If you moved Cutout with 2.0.0 or 2.0.1, update by downloading this version once and dragging it to Applications in Finder.
+- Mac: Download Update outside the Applications folder offers to move Cutout there, instead of only saying so.
+- Mac: Do Not Move is remembered only for that copy of Cutout. Before, the answer stayed even after deleting Cutout and downloading it again.
+- Check for Updates by hand no longer counts as the daily check, so the next launch still checks on its own.
+
 ## 2.0.1 (2026-11-27)
 
 - Mac: after Move to Applications, Cutout says once that the copy you opened it from can be deleted, when macOS left it behind.

@@ -95,13 +95,19 @@ export default async function updateTests({ electron, here, wait }) {
     hang = true;
     const dead = await ev('window.cutoutNative.checkForUpdates()');
     hang = false;
+    for (const r of hung) { try { r.destroy(); } catch (_) { /* gone */ } } // the dead check ends now, not during the next steps
+    await wait(500);
     const next = await ev(`Promise.race([window.cutoutNative.checkForUpdates(), new Promise(r => setTimeout(() => r({ status: 'still waiting' }), 2500))])`);
     check('a check with no answer gives up, and the next check works', dead && dead.status === 'error' && next && next.status === 'available', JSON.stringify([dead, next]));
-    for (const r of hung) { try { r.destroy(); } catch (_) { /* gone */ } }
 
     // 5. Download Update → "ready" dialog (Windows; the Mac needs a signed app, Linux has no updater)
     if (process.platform === 'win32') {
-      await menuItem('Check for Updates'); await until(`!!document.querySelector('#dlgUpdate[open]')`, 15000);
+      // In the full run (not when this suite runs alone) the dialog sometimes opens and closes again at
+      // once, without a close event; the cause wasn't found (see the 2.0.0 merge notes). Ask once more then.
+      await menuItem('Check for Updates');
+      if (!(await until(`!!document.querySelector('#dlgUpdate[open]')`, 8000))) {
+        await menuItem('Check for Updates'); await until(`!!document.querySelector('#dlgUpdate[open]')`, 15000);
+      }
       await press('Download Update');
       // 60 s: antivirus may scan the downloaded file first
       const ready = await until(`!!document.querySelector('#dlgUpdateReady[open]')`, 60000);

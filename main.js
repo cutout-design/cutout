@@ -9,6 +9,7 @@ const { app, BrowserWindow, ipcMain, clipboard, dialog, nativeTheme, nativeImage
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { execFileSync } = require('child_process');
 
 const APP_ID = 'app.cutout'; // same as build.appId in package.json (taskbar icon + grouping)
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg)$/i;
@@ -117,7 +118,7 @@ function createWindow() {
       noLink: true,
     });
     if (choice === 0) e.preventDefault(); // close anyway
-    else installOnClose = false; // Restart to Update waits for the next quit
+    else installOnClose = moveOnClose = false; // Restart to Update waits for the next quit; no move
   });
 
   win.on('close', () => {
@@ -128,6 +129,7 @@ function createWindow() {
   win.on('closed', () => {
     win = null; rendererReady = false;
     if (installOnClose) installUpdate();
+    else if (moveOnClose) moveToApplications();
   });
 }
 
@@ -243,7 +245,7 @@ const testFeed = !app.isPackaged && process.env.CUTOUT_UPDATE_CONFIG; // tests: 
 const fromStore = !!(process.windowsStore || process.mas);
 const updatesOn = (app.isPackaged && process.platform !== 'linux' && !fromStore) || !!testFeed;
 let updater = null;
-let installOnClose = false;
+let installOnClose = false, moveOnClose = false;
 const update = { version: null, ready: null, downloading: null, timer: null };
 function getUpdater() {
   if (updater || !updatesOn) return updater;
@@ -298,8 +300,7 @@ async function checkForUpdate(manual) {
       no(new Error('timeout'));
     }, testFeed && process.env.CUTOUT_UPDATE_TIMEOUT ? Number(process.env.CUTOUT_UPDATE_TIMEOUT) : 30000); })])
       .finally(() => clearTimeout(timer));
-    settings.lastUpdateCheck = Date.now();
-    saveSettings();
+    if (!manual) { settings.lastUpdateCheck = Date.now(); saveSettings(); } // a manual check doesn't use up the daily one
     const version = r && r.isUpdateAvailable ? String(r.updateInfo.version) : null;
     if (!version) return manual ? { status: 'current' } : null;
     if (!manual && settings.skipVersion === version) return null; // Skip This Version: only a manual check shows it
@@ -321,8 +322,23 @@ ipcMain.handle('update:download', async () => {
   const u = getUpdater();
   if (!u || !update.version) return { status: 'error' };
   if (update.ready) return { status: 'ready', version: update.ready };
-  // Mac: the update can only replace Cutout in the Applications folder
-  if (process.platform === 'darwin' && app.isPackaged && !app.isInApplicationsFolder()) return { status: 'move' };
+  // Mac: the update can only replace Cutout in the Applications folder, so offer to move it there now.
+  // Moving reopens Cutout from Applications; the window closes first, so unsaved changes get their question.
+  if (process.platform === 'darwin' && app.isPackaged && !inApplications()) {
+    const r = await dialog.showMessageBox(win, {
+      type: 'question',
+      message: 'Move Cutout to the Applications folder?',
+      detail: 'Cutout can update itself only from the Applications folder. It reopens from there; then choose Check for Updates again.',
+      buttons: ['Move to Applications', 'Cancel'],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (r.response !== 0) return { status: 'cancel' };
+    if (!win) { moveToApplications(); return { status: 'moving' }; }
+    moveOnClose = true;
+    win.close();
+    return { status: 'moving' };
+  }
   try {
     update.downloading = update.downloading || u.downloadUpdate();
     await update.downloading;
@@ -402,7 +418,7 @@ app.whenReady().then(async () => {
   if (process.platform === 'darwin') {
     app.setAboutPanelOptions({ applicationName: 'Cutout', applicationVersion: app.getVersion(), version: '', copyright: '' });
     if (await offerMoveToApplications()) return; // moved: the copy in Applications starts instead
-    if (settings.movedNotice && app.isInApplicationsFolder()) {
+    if (settings.movedNotice && inApplications()) {
       settings.movedNotice = false;
       saveSettings();
       await dialog.showMessageBox({ type: 'info', message: 'Cutout is now in the Applications folder', detail: 'If a copy is still where you opened it from, such as Downloads, you can delete it.', buttons: ['OK'] });
@@ -411,13 +427,32 @@ app.whenReady().then(async () => {
   if (!win) createWindow(); // a file opened while the Move question showed may have opened it already
 });
 // Mac: updates can only replace Cutout when it runs from the Applications folder. Opened straight
-// from Downloads, macOS runs a hidden read-only copy and the update fails. So offer to move it there
-// (as many Mac apps do). Asked once: Do Not Move means never ask again (an update then says why it
-// can't install). Not when opened with files: moving restarts Cutout, and the files would be lost.
+// from Downloads, macOS runs a hidden read-only copy (App Translocation) and the update fails. So offer
+// to move it there (as many Mac apps do). Do Not Move is remembered for this copy of Cutout only
+// (noMoveCopy: which unpacked copy it was): deleting the app can't clear settings on a Mac (no code runs),
+// so a fresh download asks again. 2.0.0 and 2.0.1 remembered it for good (noMoveOffer); that is dropped.
+// Download Update still offers the move. Not when opened with files: moving restarts Cutout, and the
+// files would be lost.
+/** Tells copies of Cutout apart: the file number of this copy's Info.plist (new for every unzip or copy;
+ *  APFS never reuses them). The same in macOS's translocated view of that copy. Not the creation time:
+ *  unzipping can restore the times stored in the zip, which are the same for every download. */
+function macCopyId() {
+  try { return String(fs.statSync(path.join(macBundle(), 'Contents', 'Info.plist'), { bigint: true }).ino); } catch (_) { return ''; }
+}
+/** The Cutout.app this process runs from (…/Cutout.app/Contents/MacOS/Cutout → …/Cutout.app). */
+function macBundle() { return path.resolve(process.execPath, '..', '..', '..'); }
+/** True only when Cutout really runs from an Applications folder. A copy there that macOS still runs
+ *  from a hidden translocated copy (it kept the "downloaded" flag) doesn't count: it can't update. */
+function inApplications() {
+  const b = macBundle();
+  return ['/Applications', path.join(os.homedir(), 'Applications')].some(dir => b.startsWith(dir + '/'));
+}
 let askingMove = false;
 async function offerMoveToApplications() {
-  if (!updatesOn || !app.isPackaged || settings.noMoveOffer || pendingFiles.length) return false;
-  try { if (app.isInApplicationsFolder()) return false; } catch (_) { return false; }
+  if (settings.noMoveOffer !== undefined) { delete settings.noMoveOffer; saveSettings(); }
+  if (!updatesOn || !app.isPackaged || pendingFiles.length) return false;
+  if (settings.noMoveCopy && settings.noMoveCopy === macCopyId()) return false;
+  if (inApplications()) return false;
   askingMove = true; // a Dock click meanwhile must not open a window behind the question
   const r = await dialog.showMessageBox({
     type: 'question',
@@ -428,27 +463,38 @@ async function offerMoveToApplications() {
     cancelId: 1,
   }).finally(() => { askingMove = false; });
   if (r.response === 0) return moveToApplications();
-  settings.noMoveOffer = true;
+  settings.noMoveCopy = macCopyId();
   saveSettings();
   return false;
 }
-function moveToApplications() {
-  // Electron copies Cutout to Applications, then trashes the original; macOS can block that last step
-  // without a word (the original in Downloads, for one), leaving a second copy. So the copy in
-  // Applications says once that the old one can be deleted (movedNotice, read at the next launch).
-  settings.movedNotice = true;
-  saveSettings();
+/** Copies this Cutout.app to /Applications (replacing an older one, which goes to the Trash), removes
+ *  the "downloaded from the Internet" flag from the copy, puts the original in the Trash when it can,
+ *  and reopens from Applications. Electron's own app.moveToApplicationsFolder kept the flag, so macOS
+ *  went on running the copy in Applications from a hidden translocated copy, and updates refused
+ *  ("move Cutout to the Applications folder") although it was there. Returns false if it couldn't move. */
+async function moveToApplications() {
+  const src = macBundle();
+  const dest = '/Applications/Cutout.app', tmp = '/Applications/.Cutout-moving.app';
   try {
-    // An older Cutout already there is replaced; one that is running is left alone.
-    const moved = app.moveToApplicationsFolder({ conflictHandler: type => type === 'exists' });
-    if (!moved) { settings.movedNotice = false; saveSettings(); }
-    return moved;
+    fs.rmSync(tmp, { recursive: true, force: true });
+    execFileSync('/usr/bin/ditto', [src, tmp]); // keeps the code signature, symlinks and permissions
+    try { execFileSync('/usr/bin/xattr', ['-dr', 'com.apple.quarantine', tmp]); } catch (_) { /* no flag to remove */ }
+    if (fs.existsSync(dest)) await shell.trashItem(dest);
+    fs.renameSync(tmp, dest);
   } catch (_) {
-    settings.movedNotice = false;
-    saveSettings();
+    try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (__) { /* nothing to clean */ }
     dialog.showMessageBoxSync({ type: 'warning', message: 'Couldn’t move Cutout', detail: 'Drag Cutout to the Applications folder in Finder.' });
     return false;
   }
+  // The original: a translocated copy has no known real place, and macOS can refuse to trash one in
+  // Downloads without asking. Either way the copy in Applications says once that it can be deleted.
+  let leftBehind = src.includes('/AppTranslocation/');
+  if (!leftBehind && src !== dest) leftBehind = !(await shell.trashItem(src).then(() => true, () => false));
+  settings.movedNotice = leftBehind;
+  saveSettings();
+  app.relaunch({ execPath: path.join(dest, 'Contents', 'MacOS', 'Cutout'), args: [] });
+  app.exit(0);
+  return true;
 }
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (!win && !askingMove) createWindow(); });
