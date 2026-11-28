@@ -118,6 +118,39 @@ export default async function a11yTests({ send, ev, wait }) {
   check('messages reach the screen reader each time (emptied, then said)', /^ \/ .+ \/  \/ .+$/.test(ann), ann);
   const unnamed = await ev(`JSON.stringify([...document.querySelectorAll('button, input:not([type=hidden]):not(#fileInput), select')].filter(el => el.offsetParent !== null || el.closest('.opt')).filter(el => { const n = el.getAttribute('aria-label') || el.title || (el.labels && [...el.labels].map(l => l.textContent.trim()).join('')) || el.textContent.trim() || el.placeholder; return !n; }).map(el => el.outerHTML.slice(0, 80)))`);
   check('every visible control has a name', unnamed === '[]', unnamed);
+  // A tooltip (title) alone is not a proper label for a form field; dialogs included
+  const titleOnly = await ev(`JSON.stringify([...document.querySelectorAll('input:not([type=hidden]):not(#fileInput), select, textarea')].filter(el => !el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby') && !(el.labels && [...el.labels].some(l => l.textContent.trim()))).map(el => el.outerHTML.slice(0, 80)))`);
+  check('every form field has a label or aria-label, not just a tooltip', titleOnly === '[]', titleOnly);
+  st = await ev(`JSON.stringify({ main: document.querySelectorAll('main').length, canvasInMain: !!document.querySelector('main #view'), h1: [...document.querySelectorAll('h1')].map(h => h.textContent.trim() + ':' + getComputedStyle(h).clipPath) })`); o = JSON.parse(st);
+  check('one main region holding the canvas, and a hidden h1 "Cutout"', o.main === 1 && o.canvasInMain && o.h1.length === 1 && /^Cutout:inset\(50%\)/.test(o.h1[0]), st);
+  const outside = await ev(`JSON.stringify([...document.querySelectorAll('#app > *, #app > .main > *')].filter(el => !el.matches('.main, header, footer, nav, main, aside, [role=region][aria-label]')).map(el => el.tagName.toLowerCase() + '.' + el.className))`);
+  check('every part of the window is in a landmark (header, options, tools, canvas, layers, status bar)', outside === '[]', outside);
+  // Small targets (the 15 px Transparent checkbox) pass WCAG 2.5.8 by spacing: a 24 px circle around
+  // center touches no other control. A wrapping label counts as part of the target (clicking it toggles the box)
+  const tight = await ev(`(() => { window.Cutout.state.selected.clear(); window.Cutout.changed(); const ctl = 'button, input:not([type=hidden]), select, label, [tabindex]';
+    const all = [...document.querySelectorAll(ctl)].filter(el => el.offsetParent && !el.closest('dialog') && !el.closest('#menu'));
+    const bad = [];
+    for (const el of all.filter(e => e.matches('input'))) { const r = (el.closest('label') || el).getBoundingClientRect(); // a wrapping label is part of the target if (r.width >= 24 && r.height >= 24) continue;
+      const cx = r.x + r.width / 2, cy = r.y + r.height / 2;
+      for (const o of all) { if (o === el || o.contains(el) || el.contains(o) || (el.labels && [...el.labels].includes(o))) continue; const q = o.getBoundingClientRect(); if (!q.width) continue;
+        const dx = Math.max(q.x - cx, 0, cx - q.right), dy = Math.max(q.y - cy, 0, cy - q.bottom); if (Math.hypot(dx, dy) < 12) bad.push((el.id || el.className) + ' near ' + (o.id || o.className || o.tagName)); } }
+    return JSON.stringify({ checked: all.filter(e => e.matches('input')).length, bad }); })()`);
+  check('small controls (Transparent checkbox) have room around them: WCAG 2.5.8 spacing', JSON.parse(tight).bad.length === 0 && /abTransparent/.test(await ev(`document.querySelector('#abTransparent').offsetParent ? 'abTransparent' : ''`)), tight);
+  // Contrast of the accent colors (WCAG 2.2 AA) in both themes: white text on blue fills 4.5:1, blue lines,
+  // rings and checkmarks 3:1 against the panels and the canvas stage
+  const contrast = await ev(`(() => { const root = document.documentElement, was = root.dataset.theme, out = {};
+    const L = c => { const m = c.match(/[\\d.]+/g).slice(0, 3).map(v => +v / 255).map(v => v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); return .2126 * m[0] + .7152 * m[1] + .0722 * m[2]; };
+    const cr = (a, b) => { const x = L(a), y = L(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+    const probe = document.createElement('div'); document.body.appendChild(probe);
+    const col = v => { probe.style.color = 'var(' + v + ')'; return getComputedStyle(probe).color; };
+    for (const t of ['light', 'dark']) { root.dataset.theme = t;
+      const save = getComputedStyle(document.querySelector('button.primary'));
+      out[t] = { save: +cr(save.color, save.backgroundColor).toFixed(2), menu: +cr(col('--accent-text'), col('--accent')).toFixed(2),
+        linePanel: +cr(col('--accent-line'), col('--panel')).toFixed(2), lineStage: +cr(col('--accent-line'), col('--stage')).toFixed(2), lineBg: +cr(col('--accent-line'), col('--bg')).toFixed(2) }; }
+    probe.remove(); if (was) root.dataset.theme = was; else delete root.dataset.theme; return JSON.stringify(out); })()`);
+  const cc = JSON.parse(contrast);
+  check('white text on the accent (Save, menu highlight) is 4.5:1 or more in both themes', ['light', 'dark'].every(t => cc[t].save >= 4.5 && cc[t].menu >= 4.5), contrast);
+  check('accent lines (focus rings, outlines, handles) are 3:1 or more on panels, stage and background', ['light', 'dark'].every(t => cc[t].linePanel >= 3 && cc[t].lineStage >= 3 && cc[t].lineBg >= 3), contrast);
   // 10. Reduced motion
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] }); await wait(100);
   const td = await ev(`getComputedStyle(document.querySelector('#toast')).transitionDuration`);

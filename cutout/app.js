@@ -2142,7 +2142,7 @@
   function readColors() {
     const cs = getComputedStyle(document.documentElement);
     const v = n => cs.getPropertyValue(n).trim();
-    colors = { stage: v('--stage'), dim: v('--stage-dim'), edge: v('--artboard-edge'), accent: v('--accent'), grid: v('--grid'), ca: v('--checker-a'), cb: v('--checker-b'), muted: v('--muted') };
+    colors = { stage: v('--stage'), dim: v('--stage-dim'), edge: v('--artboard-edge'), accent: v('--accent-line'), grid: v('--grid'), ca: v('--checker-a'), cb: v('--checker-b'), muted: v('--muted') };
     const sz = Math.round(8 * dpr), p = makeCanvas(sz * 2, sz * 2), g = p.getContext('2d');
     g.fillStyle = colors.ca; g.fillRect(0, 0, sz * 2, sz * 2);
     g.fillStyle = colors.cb; g.fillRect(sz, 0, sz, sz); g.fillRect(0, sz, sz, sz);
@@ -2415,7 +2415,7 @@
       const r = drag.kind === 'marquee' ? marqueeRect(drag) : dragRect(drag);
       const x = X(r.x), y = Y(r.y), w = X(r.x + r.w) - x, h = Y(r.y + r.h) - y;
       if (drag.kind === 'rubber') {
-        g.fillStyle = 'rgba(13,153,255,0.08)';
+        g.fillStyle = 'rgba(0,115,231,0.08)';
         g.fillRect(x, y, w, h);
         g.strokeStyle = colors.accent;
         g.lineWidth = lw;
@@ -2446,7 +2446,7 @@
       const r = drag.dist * dpr;
       g.lineWidth = lw;
       g.strokeStyle = colors.accent;
-      g.fillStyle = 'rgba(13,153,255,0.06)';
+      g.fillStyle = 'rgba(0,115,231,0.06)';
       g.beginPath();
       g.arc(drag.sp.x, drag.sp.y, r, 0, Math.PI * 2);
       g.fill();

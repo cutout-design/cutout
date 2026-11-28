@@ -10,11 +10,11 @@ Cutout handles the quick bitmap fixes that come up while designing in Figma: cut
 
 Cut out a product photo: paste it, click the background with the magic wand, press Delete, copy it back.
 
-![Pasting a product photo, selecting its background with the magic wand, deleting it and copying the result](docs/images/cut-out-background.webp)
+![Pasting a product photo, selecting its background with the magic wand, deleting it and copying the result](docs/images/cut-out-background.gif)
 
 Remove a notification from a screenshot: draw a marquee around it, Smart fill it (Shift+Backspace), copy it back.
 
-![Pasting an app screenshot, selecting a notification with the marquee, smart-filling it from its surroundings and copying the result](docs/images/remove-notification.webp)
+![Pasting an app screenshot, selecting a notification with the marquee, smart-filling it from its surroundings and copying the result](docs/images/remove-notification.gif)
 
 <p>
 <img src="docs/images/window-light.png" alt="The Cutout window in the light theme, with the magic wand selecting the background around a bottle" width="49%">
