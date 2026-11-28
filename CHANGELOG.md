@@ -2,7 +2,9 @@
 
 What's new in each version of Cutout. The section for a version becomes its release notes on GitHub.
 
-## Unreleased
+## 2.0.0 (2026-11-27)
+
+Cutout 2.0 is signed on Windows and Mac and keeps itself up to date.
 
 - Automatic updates in the desktop app: once a day Cutout checks GitHub for a new version and offers Download Update, Later or Skip This Version; the update downloads in the background and installs with Restart to Update, or when you quit. Check for Updates is in the Cutout menu (on a Mac, the Cutout menu in the menu bar). The check sends nothing about you: no version, no ID, no language, no cookies. Updating from this version on is automatic; to get here, install it once by hand. On a Mac, Cutout offers to move itself to the Applications folder when opened from elsewhere, since it can only update itself there.
 - About Cutout links to the User Guide and Cutout's privacy policy. On the Mac app, the menu bar has a new Help menu with User Guide and Privacy Policy.
