@@ -314,7 +314,7 @@
         <div class="card" data-os="mac">
           <h3><svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M13.6 10.6c0-2 1.6-2.9 1.7-3a3.7 3.7 0 0 0-2.9-1.6c-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7A3.9 3.9 0 0 0 3.5 8c-1.4 2.4-.4 6 1 8 .7 1 1.4 2 2.4 2s1.3-.6 2.5-.6 1.5.6 2.5.6 1.7-1 2.3-2a8 8 0 0 0 1-2.2 3.4 3.4 0 0 1-1.6-3.2zM11.7 4.6A3.4 3.4 0 0 0 12.5 2a3.5 3.5 0 0 0-2.3 1.2 3.2 3.2 0 0 0-.8 2.4 2.9 2.9 0 0 0 2.3-1z"/></svg>Mac</h3>
           <p>Unzip the download and drag Cutout to your Applications folder.</p>
-          <div class="links"><a class="btn primary small" href="https://github.com/cutout-design/cutout/releases/download/v__VERSION__/Cutout-__VERSION__.zip">Apple Silicon</a></div>
+          <div class="links"><a class="btn primary small" href="https://github.com/cutout-design/cutout/releases/download/v__VERSION__/Cutout-__VERSION__.dmg">Apple Silicon</a></div>
         </div>
         <div class="card" data-os="web">
           <h3><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M2.5 10h15M10 2.5c2.2 2.2 2.2 12.8 0 15M10 2.5c-2.2 2.2-2.2 12.8 0 15"/></svg>Browser</h3>
@@ -387,7 +387,7 @@
   })();
 
   // Point the main button at the visitor's platform
-  const DL = 'https://github.com/cutout-design/cutout/releases/download/v__VERSION__', WIN_URL = DL + '/Cutout-__VERSION__.exe', MAC_URL = DL + '/Cutout-__VERSION__.zip'; // the version placeholders are filled in at deploy (.github/workflows/website.yml)
+  const DL = 'https://github.com/cutout-design/cutout/releases/download/v__VERSION__', WIN_URL = DL + '/Cutout-__VERSION__.exe', MAC_URL = DL + '/Cutout-__VERSION__.dmg'; // the version placeholders are filled in at deploy (.github/workflows/website.yml)
   (() => {
     // An iPad asks for the desktop site and says "Macintosh"; it has touch points, a Mac doesn't
     const ua = navigator.userAgent, mac = /Macintosh|Mac OS X/.test(ua) && navigator.maxTouchPoints < 2, win = /Windows/.test(ua);

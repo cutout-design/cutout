@@ -21,5 +21,6 @@ module.exports = {
     entitlementsInherit: 'installer/entitlements.signed.plist', // Electron's helper processes
     notarize: true, // electron-builder 26: uses APPLE_API_KEY / _ID / _ISSUER, then staples the ticket
   },
+  dmg: { ...base.dmg, sign: true }, // the disk image is signed too; the release workflow notarizes and staples it
   forceCodeSigning: true, // fail the build instead of quietly shipping an unsigned app
 };

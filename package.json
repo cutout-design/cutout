@@ -61,6 +61,12 @@
           "arch": [
             "arm64"
           ]
+        },
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
         }
       ],
       "icon": "installer/Cutout.icon",
@@ -113,6 +119,10 @@
       "shortcutName": "Cutout",
       "runAfterFinish": true,
       "artifactName": "Cutout-${version}.${ext}"
+    },
+    "dmg": {
+      "title": "Cutout",
+      "writeUpdateInfo": false
     }
   },
   "devDependencies": {

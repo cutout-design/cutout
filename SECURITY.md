@@ -22,20 +22,20 @@ Only the latest release gets fixes. Updating to it is the way to get them.
 
 Starting with 2.0.0, the Windows installers and the app inside them are code-signed (Azure Artifact Signing), and the Mac app is signed with an Apple Developer ID and notarized by Apple, so macOS checks it when it opens.
 
-- Windows (PowerShell): `(Get-AuthenticodeSignature Cutout-2.0.0.exe).Status` should say `Valid`. Or right-click the file, then Properties → Digital Signatures.
+- Windows (PowerShell): `(Get-AuthenticodeSignature Cutout-2.0.2.exe).Status` should say `Valid`. Or right-click the file, then Properties → Digital Signatures.
 - Mac (Terminal): `spctl -a -vv /Applications/Cutout.app` should say `accepted` and `source=Notarized Developer ID`.
 
 From that release on, there are also two ways to check that any download is the file the release workflow built.
 
 **Checksum.** Each release lists the SHA-256 checksum of every file in `SHA256SUMS.txt`. Compute your download's checksum and compare it with the line for that file:
 
-- Windows (PowerShell): `Get-FileHash Cutout-2.0.0.exe`
-- Mac (Terminal): `shasum -a 256 Cutout-2.0.0.zip`
+- Windows (PowerShell): `Get-FileHash Cutout-2.0.2.exe`
+- Mac (Terminal): `shasum -a 256 Cutout-2.0.2.dmg`
 
 **Build provenance.** Each file also comes with a signed record from GitHub that it was built by this repository's release workflow from the release's tag. With the [GitHub CLI](https://cli.github.com/) installed, check a file with:
 
 ```bash
-gh attestation verify Cutout-2.0.0.exe --repo cutout-design/cutout
+gh attestation verify Cutout-2.0.2.exe --repo cutout-design/cutout
 ```
 
 ## How Cutout limits the damage

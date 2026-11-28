@@ -1,5 +1,5 @@
 # Builds Cutout for Windows and Mac when a version tag (v1.2.3) is pushed, and publishes a GitHub Release
-# with the Windows installers and the Mac app attached, plus the files the app's updater reads
+# with the Windows installers and the Mac disk image attached, plus the files the app's updater reads
 # (latest.yml, latest-arm64.yml, latest-mac.yml and .blockmap files). Pull requests (e.g. Dependabot
 # updates) and runs by hand (Actions tab) only build, to check that everything still builds; they don't release.
 # Runs by hand also sign the Windows builds and sign + notarize the Mac app, to test signing without a
@@ -38,7 +38,10 @@ jobs:
           - name: mac-arm64 # Apple Silicon
             os: macos-latest
             script: dist:mac
+            # .dmg: the download (drag to Applications; unzipping into a OneDrive-synced folder broke the
+            # app's symlinks). .zip: what installed copies update from (Squirrel.Mac needs a zip).
             files: |
+              dist/*.dmg
               dist/*.zip
               dist/*.zip.blockmap
               dist/latest-mac.yml
@@ -134,6 +137,11 @@ jobs:
           # The log is public: hide the certificate holder's name (it is still inside the app's signature).
           npx electron-builder --mac --arm64 --config electron-builder.signed.js --publish never 2>&1 |
             sed -E 's/Developer ID Application: [^(]*[(]/Developer ID Application: *** (/g'
+          # electron-builder notarizes the app inside; the signed disk image is notarized and stapled here,
+          # so Gatekeeper accepts the .dmg itself when it's opened offline too.
+          dmg=$(ls dist/*.dmg)
+          xcrun notarytool submit "$dmg" --key "$APPLE_API_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER" --wait --timeout 30m
+          xcrun stapler staple "$dmg"
           rm -f "$APPLE_API_KEY"
       - name: Check signature and notarization (Mac)
         if: env.MAC_SIGN == 'true'
@@ -142,7 +150,11 @@ jobs:
           codesign --verify --deep --strict "$app"
           spctl --assess --type execute "$app" # exit code only: its verbose output names the signer
           xcrun stapler validate "$app" > /dev/null
-          echo "Signed, notarized and stapled"
+          dmg=$(ls dist/*.dmg)
+          codesign --verify "$dmg"
+          spctl --assess --type open --context context:primary-signature "$dmg"
+          xcrun stapler validate "$dmg" > /dev/null
+          echo "Signed, notarized and stapled (app and disk image)"
       - uses: actions/upload-artifact@v7
         with:
           name: cutout-${{ matrix.name }}
@@ -172,6 +184,7 @@ jobs:
         with:
           subject-path: |
             out/Cutout-*.exe
+            out/Cutout-*.dmg
             out/Cutout-*.zip
       - name: Publish release
         env:
@@ -188,8 +201,8 @@ jobs:
           # Each updater file must point at its own platform's file (an x64 install must never get the ARM64 one).
           grep -q "path: Cutout-$version.exe$" out/latest.yml && grep -q "path: Cutout-$version-arm64.exe$" out/latest-arm64.yml \
             && grep -q "path: Cutout-$version.zip$" out/latest-mac.yml || { echo "Updater files don't match the builds" >&2; exit 1; }
-          # SHA-256 checksums of the three files, so a download can be checked (see SECURITY.md).
-          (cd out && sha256sum "Cutout-$version.exe" "Cutout-$version-arm64.exe" "Cutout-$version.zip" > SHA256SUMS.txt)
+          # SHA-256 checksums of the downloads and the Mac update zip, so a download can be checked (see SECURITY.md).
+          (cd out && sha256sum "Cutout-$version.exe" "Cutout-$version-arm64.exe" "Cutout-$version.dmg" "Cutout-$version.zip" > SHA256SUMS.txt)
           cat out/SHA256SUMS.txt
           # Same file names on both platforms; the label shown on the release page says which is which.
           # The update files that installed copies read (latest*.yml, and .blockmap for partial downloads)
@@ -197,11 +210,12 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             "out/Cutout-$version.exe#Cutout $version for Windows (x64)" \
             "out/Cutout-$version-arm64.exe#Cutout $version for Windows (ARM64)" \
-            "out/Cutout-$version.zip#Cutout $version for Mac" \
+            "out/Cutout-$version.dmg#Cutout $version for Mac" \
             "out/SHA256SUMS.txt#Checksums (SHA-256)" \
             "out/latest.yml#Update info for Windows (x64)" \
             "out/latest-arm64.yml#Update info for Windows (ARM64)" \
             "out/latest-mac.yml#Update info for Mac" \
+            "out/Cutout-$version.zip#Update package for Mac" \
             "out/Cutout-$version.exe.blockmap#Update data for Windows (x64)" \
             "out/Cutout-$version-arm64.exe.blockmap#Update data for Windows (ARM64)" \
             "out/Cutout-$version.zip.blockmap#Update data for Mac" \
