@@ -151,7 +151,9 @@ ipcMain.handle('file:save-dialog', async (_e, suggestedName) => {
   const dir = settings.saveDir && fs.existsSync(settings.saveDir) ? settings.saveDir : app.getPath('desktop');
   const name = String(suggestedName || 'cutout.png').replace(/[\\/:*?"<>|]/g, '-');
   const r = await dialog.showSaveDialog(win, {
-    defaultPath: path.join(dir, name),
+    // Mac App Store build (sandboxed): the folder saved last may not be readable after a relaunch, so
+    // pass only the name and let the system's Save panel open in the folder it remembers.
+    defaultPath: process.mas ? name : path.join(dir, name),
     filters: /\.jpe?g$/i.test(name) ? [jpg, png] : [png, jpg],
   });
   if (r.canceled || !r.filePath) return null;
@@ -163,6 +165,9 @@ ipcMain.handle('file:save-dialog', async (_e, suggestedName) => {
 ipcMain.handle('file:write', async (_e, filePath, bytes) => {
   if (!savePaths.has(filePath)) throw new Error('Not a chosen save location');
   const data = Buffer.from(bytes);
+  // Mac App Store build (sandboxed): the Save panel grants this one file, not its folder, so a temp file
+  // next to it can't be created. Write the file itself (tests/mas/sandbox-check.mjs checks this).
+  if (process.mas) { await fs.promises.writeFile(filePath, data); return; }
   const tmp = `${filePath}.cutout-tmp`;
   await fs.promises.writeFile(tmp, data);
   // Replace in one step, so a failed save never leaves half a file. Right after a write, Dropbox,
