@@ -71,7 +71,8 @@ jobs:
           echo "$PROFILE_BASE64" | base64 --decode > "$MAS_PROVISIONING_PROFILE"
           # The log is public: hide the certificate holder's name (Apple shows it as the seller anyway).
           npx electron-builder --mac mas --arm64 --config electron-builder.mas.js --publish never 2>&1 |
-            sed -E 's/(Apple Distribution|Mac Installer Distribution|3rd Party Mac Developer [A-Za-z]+): [^(]*[(]/\1: *** (/g'
+            sed -E -e 's/(Apple Distribution|Mac Installer Distribution|3rd Party Mac Developer [A-Za-z]+): [^(]*[(]/\1: *** (/g' \
+              -e 's/([^A-Za-z]O ?= ?)[^,/]*/\1***/g' # the certificate's organization field holds the name too
           rm -f "$MAS_PROVISIONING_PROFILE"
       - name: Check the package
         run: |
