@@ -2,8 +2,8 @@
 // privacy page (cutout.design/privacy/) from docs/privacy.md. The pages reuse site/index.html's
 // styles, header, footer and theme switch, so they always match the site. Run by .github/workflows/website.yml:
 //   MARKED=<folder of the marked package> GUIDE_DOCS=<docs folder> node scripts/build-guide.mjs <site output folder>
-// GUIDE_DOCS is the latest release's docs/ folder, so the guide matches the downloads (default: this
-// checkout's docs/). The privacy page always comes from this checkout's docs/ (main), so a change to
+// GUIDE_DOCS is the latest release's docs/ folder, so the guide's text matches the downloads (default: this
+// checkout's docs/). Its images come from this checkout's docs/images when they exist (see imgSrc). The privacy page always comes from this checkout's docs/ (main), so a change to
 // it goes live without waiting for a release. marked (MIT) is installed only for this step, outside the app.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -53,8 +53,12 @@ const slug = text => {
 // Images: copy the ones the guide uses next to the page; use the dark versions where there are some
 const darkOf = { 'window-light.png': 'window-dark.png' };
 const darkVideo = { 'cut-out-background': 'cut-out-background-dark' };
-// Looked up in the release's docs, then this checkout's docs and site images (files added since the release)
-const imgSrc = name => [path.join(docs, 'images', name), path.join(root, 'docs/images', name), path.join(root, 'site/images', name)].find(f => fs.existsSync(f)) || path.join(root, 'site/images', name);
+// Images come from this checkout's docs (main) first, so a re-recorded picture shows without waiting for a
+// release, then the release's docs, then the site images. The text is the release's, but an image's alt text
+// comes from main's guide when main uses the same file, so the description matches the picture shown.
+const imgSrc = name => [path.join(root, 'docs/images', name), path.join(docs, 'images', name), path.join(root, 'site/images', name)].find(f => fs.existsSync(f)) || path.join(root, 'site/images', name);
+const mainAlt = new Map();
+for (const m of fs.readFileSync(path.join(root, 'docs/user-guide.md'), 'utf8').matchAll(/!\[([^\]]*)\]\(([^)\s]+)\)/g)) mainAlt.set(path.basename(m[2]), m[1]);
 const copyImg = name => fs.copyFileSync(imgSrc(name), path.join(out, 'guide/images', name));
 let animId = 0;
 fs.mkdirSync(path.join(out, 'guide/images'), { recursive: true });
@@ -69,6 +73,7 @@ marked.use({
     },
     image({ href, text }) {
       const name = path.basename(href);
+      if (mainAlt.has(name)) text = mainAlt.get(name);
       // An animation (GIF on GitHub, or WebP in older releases) with a video version (name.mp4) becomes
       // the site's pausable video, as on the home page
       const vid = name.replace(/.(gif|webp)$/, ''), darkVid = darkVideo[vid];

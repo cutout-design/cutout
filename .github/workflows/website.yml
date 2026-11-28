@@ -16,7 +16,7 @@ name: Website
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'docs/privacy.md', 'scripts/build-guide.mjs', '.github/workflows/website.yml']
+    paths: ['site/**', 'docs/privacy.md', 'docs/images/**', 'scripts/build-guide.mjs', '.github/workflows/website.yml']
     tags: ['v*']
   workflow_dispatch:
 
