@@ -143,6 +143,16 @@ window.moreTests = async () => {
     // The old check doubled its time with each comment: 40 of them froze the window for hours
     r = await pasteSvg('<!---->'.repeat(40) + 'x</svg>');
     check('SVG paste: crafted comment text is checked quickly', !r.layer && r.ms < 200, `${Math.round(r.ms)} ms`);
+    // Cutout menu → Privacy opens the privacy page (app stores ask for a link in the app)
+    const open = window.open; let opened = null;
+    window.open = url => { opened = url; return null; };
+    try {
+      $('#appMenu').click(); await wait(30);
+      const item = [...document.querySelectorAll('#menu .menu-item')].find(b => b.getAttribute('aria-label') === 'Privacy');
+      if (item) item.click();
+      await wait(30);
+    } finally { window.open = open; }
+    check('Cutout menu: Privacy opens the privacy page', opened === 'https://cutout.design/privacy/', String(opened));
   } catch (e) {
     check('the suite ran to the end', false, e.message);
   } finally {

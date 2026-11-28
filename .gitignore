@@ -3,3 +3,4 @@ dist/
 out/
 *.lnk
 CLAUDE.local.md
+*.provisionprofile

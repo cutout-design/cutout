@@ -1,0 +1,95 @@
+# Builds the Mac App Store version for an existing release tag and uploads it to App Store Connect, by hand
+# (Actions tab → Mac App Store → Run workflow → tag, e.g. v1.4.0). The upload lands in TestFlight; submitting
+# it for review stays a step in App Store Connect. Kept apart from release.yml, like the Microsoft Store
+# packages (store.yml): the GitHub Release keeps exactly its files.
+#
+# The sandboxed build itself is tested by mas-sandbox.yml (runs on every version tag). This one only
+# signs, checks and uploads; a store-signed app can't be started outside the App Store or TestFlight.
+#
+# Repository secrets it needs (none of them is in the code):
+#   MAS_CERTS_P12_BASE64, MAS_CERTS_PASSWORD   one .p12 with "Apple Distribution" and "Mac Installer
+#                                              Distribution" (both from the Apple Developer account)
+#   MAS_PROVISIONING_PROFILE_BASE64            the Mac App Store provisioning profile for app.cutout
+#   APPLE_TEAM_ID, APPLE_API_KEY_P8, APPLE_API_KEY_ID, APPLE_API_ISSUER   already set for notarizing
+#     (release.yml); the API key needs the App Manager or Developer role to upload.
+name: Mac App Store
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to build (for example v1.4.0)
+        required: true
+      upload:
+        description: Upload to App Store Connect (off = build and check only)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  mas:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      # The Mac icon is an Icon Composer file (installer/Cutout.icon): compiling it needs Xcode 26's actool.
+      - name: Use Xcode 26 or newer
+        run: |
+          x=$(ls -d /Applications/Xcode_2[6-9]*.app /Applications/Xcode_[3-9][0-9]*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$x" ]; then echo "No Xcode 26 or newer on this runner"; ls -d /Applications/Xcode*.app; exit 1; fi
+          sudo xcode-select -s "$x"
+      - run: npm ci
+      - name: Check the tag matches package.json
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          pkg=$(node -p "require('./package.json').version")
+          if [ "v$pkg" != "$TAG" ]; then echo "Tag $TAG but package.json $pkg" >&2; exit 1; fi
+      - name: Build and sign
+        env:
+          CSC_LINK: ${{ secrets.MAS_CERTS_P12_BASE64 }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAS_CERTS_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_BASE64: ${{ secrets.MAS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          set -o pipefail
+          for v in CSC_LINK CSC_KEY_PASSWORD APPLE_TEAM_ID PROFILE_BASE64; do
+            if [ -z "${!v}" ]; then echo "Missing secret for $v" >&2; exit 1; fi
+          done
+          export MAS_PROVISIONING_PROFILE="$RUNNER_TEMP/Cutout_Mac_App_Store.provisionprofile"
+          echo "$PROFILE_BASE64" | base64 --decode > "$MAS_PROVISIONING_PROFILE"
+          # The log is public: hide the certificate holder's name (Apple shows it as the seller anyway).
+          npx electron-builder --mac mas --arm64 --config electron-builder.mas.js --publish never 2>&1 |
+            sed -E 's/(Apple Distribution|Mac Installer Distribution|3rd Party Mac Developer [A-Za-z]+): [^(]*[(]/\1: *** (/g'
+          rm -f "$MAS_PROVISIONING_PROFILE"
+      - name: Check the package
+        run: |
+          pkg=$(ls dist/mas-arm64/Cutout-*-mas.pkg 2>/dev/null || ls dist/*-mas.pkg)
+          echo "PKG=$pkg" >> "$GITHUB_ENV"
+          pkgutil --check-signature "$pkg" | grep -E "Status|Certificate Chain" | head -3
+          app=$(ls -d dist/mas-arm64/Cutout.app)
+          codesign --verify --deep --strict "$app"
+          codesign -d --entitlements - --xml "$app" | plutil -p - | grep -E "app-sandbox|user-selected|network|application-groups"
+          echo "Signed package: $pkg"
+      - name: Upload to App Store Connect (TestFlight)
+        if: inputs.upload
+        env:
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          key=~/.appstoreconnect/private_keys/AuthKey_$APPLE_API_KEY_ID.p8
+          echo "$APPLE_API_KEY_P8" > "$key"
+          xcrun altool --validate-app --type macos --file "$PKG" --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER"
+          xcrun altool --upload-app --type macos --file "$PKG" --apiKey "$APPLE_API_KEY_ID" --apiIssuer "$APPLE_API_ISSUER"
+          rm -f "$key"
+          echo "Uploaded. It shows in App Store Connect → TestFlight after Apple processes it (usually minutes)."

@@ -31,7 +31,7 @@ export default async function a11yTests({ send, ev, wait }) {
   await key('ArrowDown'); const a2 = await ev(`document.activeElement.textContent.trim()`);
   check('ArrowDown moves to the next item', /Light/.test(a2), a2);
   await key('ArrowUp'); await key('ArrowUp'); const a3 = await ev(`document.activeElement.textContent.trim()`);
-  check('ArrowUp wraps around to the last item', /About/.test(a3), a3);
+  check('ArrowUp wraps around to the last item', /Privacy/.test(a3), a3);
   await key('Escape'); const f2 = await focused();
   st = await ev(`JSON.stringify({ open: !document.querySelector('#menu').hidden, exp: document.querySelector('#appMenu').getAttribute('aria-expanded') })`); o = JSON.parse(st);
   check('Esc closes it and focus returns to the button', !o.open && o.exp === 'false' && /^#appMenu/.test(f2), f2 + ' ' + st);

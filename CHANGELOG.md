@@ -4,6 +4,7 @@ What's new in each version of Cutout. The section for a version becomes its rele
 
 ## Unreleased
 
+- The Cutout menu has a Privacy item that opens Cutout's privacy page.
 - Dragging a marquee, moving layers or dragging a selection box to the edge of the canvas scrolls the view, as in Fireworks and Figma. It speeds up as you go past the edge (full speed 40 px past it, on every side), and the selection keeps growing while you hold the pointer still.
 - Windows: the installers and the app are code-signed, so Windows shows who published them.
 - Mac: the app is signed and notarized by Apple, so it opens after the usual "downloaded from the Internet" question, without a trip to Privacy & Security.

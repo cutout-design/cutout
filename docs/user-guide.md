@@ -303,6 +303,7 @@ Open the **Cutout** menu (top-left):
 
 - **Theme**: System (follows your computer), Light or Dark. In the desktop app, the window's title bar follows it too.
 - **About Cutout**: the version you're running. On the Mac app it's in the menu bar instead (Cutout → About Cutout).
+- **Privacy**: opens Cutout's privacy page (cutout.design/privacy) in your browser.
 
 Cutout remembers its settings (theme, tolerances, eraser size, marquee shape, proportion locks and so on) between sessions.
 
